@@ -1,0 +1,91 @@
+
+> mkf-viewer@1.0.0 start
+> node server.js
+
+서버가 http://0.0.0.0:3000 에서 실행 중입니다.
+환경 설정: {
+  nodeEnv: undefined,
+  dbHost: 'localhost',
+  dbName: 'mkf',
+  dbPort: '5432'
+}
+데이터베이스 연결 성공: { now: 2025-04-24T09:08:16.753Z }
+Records request received: { nationality: '전체', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master ORDER BY id ASC with values: []
+Found 1108 records
+Records request received: { nationality: '전체', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master ORDER BY id ASC with values: []
+Found 1108 records
+Records request received: { nationality: '전체', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master ORDER BY id ASC with values: []
+Found 1108 records
+Records request received: { nationality: '전체', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master ORDER BY id ASC with values: []
+Found 1108 records
+Records request received: { nationality: '전체', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master ORDER BY id ASC with values: []
+Found 1108 records
+Records request received: { nationality: '전체', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master ORDER BY id ASC with values: []
+Found 1108 records
+Records request received: { nationality: '전체', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master ORDER BY id ASC with values: []
+Found 1108 records
+Records request received: { nationality: '전체', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master ORDER BY id ASC with values: []
+Found 1108 records
+Records request received: { nationality: '캄보디아', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master WHERE nationality = $1 ORDER BY id ASC with values: [ '캄보디아' ]
+Found 92 records
+Records request received: { nationality: '캄보디아', commitType: '신규', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master WHERE nationality = $1 AND commit_type = $2 ORDER BY id ASC with values: [ '캄보디아', '신규' ]
+Found 33 records
+Records request received: { nationality: '캄보디아', commitType: '신규', commitStatus: '진행중' }
+Executing query: SELECT * FROM mkf_master WHERE nationality = $1 AND commit_type = $2 AND commit_status = $3 ORDER BY id ASC with values: [ '캄보디아', '신규', '진행중' ]
+Found 7 records
+Records request received: { nationality: '전체', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master ORDER BY id ASC with values: []
+Found 1108 records
+Records request received: { nationality: '전체', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master ORDER BY id ASC with values: []
+Found 1108 records
+Records request received: { nationality: '전체', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master ORDER BY id ASC with values: []
+Found 1108 records
+Records request received: { nationality: '캄보디아', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master WHERE nationality = $1 ORDER BY id ASC with values: [ '캄보디아' ]
+Found 92 records
+Records request received: { nationality: '캄보디아', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master WHERE nationality = $1 ORDER BY id ASC with values: [ '캄보디아' ]
+Found 92 records
+Records request received: { nationality: '캄보디아', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master WHERE nationality = $1 ORDER BY id ASC with values: [ '캄보디아' ]
+Found 92 records
+Records request received: { nationality: '캄보디아', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master WHERE nationality = $1 ORDER BY id ASC with values: [ '캄보디아' ]
+Found 92 records
+Records request received: { nationality: '캄보디아', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master WHERE nationality = $1 ORDER BY id ASC with values: [ '캄보디아' ]
+Found 92 records
+Records request received: { nationality: '캄보디아', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master WHERE nationality = $1 ORDER BY id ASC with values: [ '캄보디아' ]
+Found 92 records
+Records request received: { nationality: '캄보디아', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master WHERE nationality = $1 ORDER BY id ASC with values: [ '캄보디아' ]
+Found 92 records
+Records request received: { nationality: '캄보디아', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master WHERE nationality = $1 ORDER BY id ASC with values: [ '캄보디아' ]
+Found 92 records
+Records request received: { nationality: '전체', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master ORDER BY id ASC with values: []
+Found 1108 records
+Records request received: { nationality: '전체', commitType: '신규', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master WHERE commit_type = $1 ORDER BY id ASC with values: [ '신규' ]
+Found 384 records
+Records request received: { nationality: '캄보디아', commitType: '신규', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master WHERE nationality = $1 AND commit_type = $2 ORDER BY id ASC with values: [ '캄보디아', '신규' ]
+Found 33 records
+Records request received: { nationality: '전체', commitType: '전체', commitStatus: '전체' }
+Executing query: SELECT * FROM mkf_master ORDER BY id ASC with values: []
+Found 1108 records
+^C^C

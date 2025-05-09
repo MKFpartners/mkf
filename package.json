@@ -1,0 +1,18 @@
+{
+  "name": "mkf-viewer",
+  "version": "1.0.0",
+  "description": "MKF Master Data Viewer",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "express": "^4.21.2",
+    "pg": "^8.15.6"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

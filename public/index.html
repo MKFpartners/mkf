@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MKF Data Management</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div class="container">
+        <h1>MKF Data Management</h1>
+
+        <div id="search-fields" class="filter-section">
+            <!-- First Row: ID, Nationality, Visa Type, Status -->
+            <div class="filter-row">
+                <div class="filter-item">
+                    <label for="idFilter">ID:</label>
+                    <input type="text" id="idFilter" placeholder="Search by ID">
+                </div>
+                <div class="filter-item">
+                    <label for="nationality">Nationality(국적):</label>
+                    <select id="nationality">
+                        <option value="전체">All</option>
+                        <option value="캄보디아">Cambodia</option>
+                        <option value="네팔">Nepal</option>
+                        <option value="베트남">Vietnam</option>
+                        <option value="필리핀">Philippines</option>
+                        <option value="태국">Thailand</option>
+                        <option value="몽골">Mongolia</option>
+                        <option value="인도네시아">Indonesia</option>
+                        <option value="스리랑카">Sri Lanka</option>
+                        <option value="우즈베키스탄">Uzbekistan</option>
+                        <option value="파키스탄">Pakistan</option>
+                        <option value="미얀마">Myanmar</option>
+                        <option value="키르기스스탄">Kyrgyzstan</option>
+                        <option value="방글라데시">Bangladesh</option>
+                        <option value="동티모르">East Timor</option>
+                        <option value="라오스">Laos</option>
+                        <option value="중국">China</option>
+                    </select>
+                </div>
+                <!-- <div class="filter-item">
+                    <label for="visaType">Visa Type(비자유형):</label>
+                    <select id="visaType">
+                        <option value="전체">All</option>
+                        <option value="E9">E9</option>
+                        <option value="E8">E8</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label for="loanPrePriority">Loan Preference(대출희망):</label>
+                    <select id="loanPrePriority">
+                        <option value="전체">All</option>
+                        <option value="1">High Priority</option>
+                        <option value="2">Preferred</option>
+                        <option value="3">Not Interested</option>
+                    </select>
+                </div>
+                <div class="filter-item">
+                    <label for="commitStatus">Status(상태):</label>
+                    <select id="commitStatus">
+                        <option value="전체">All</option>
+                        <option value="대기">Pending</option>
+                        <option value="진행중">In Progress</option>
+                        <option value="완료">Completed</option>
+                        <option value="반려">Rejected</option>
+                    </select>
+                </div> -->
+                <div class="filter-item">
+                    <label for="nameFilter">Name(이름):</label>
+                    <input type="text" id="nameFilter" placeholder="Search by Name">
+                </div>
+                <!-- </div> -->
+                <!-- Second Row: Name, Phone Type, Passport Number, Phone Number -->
+                <!-- <div class="filter-row">
+                    <div class="filter-item">
+                        <label for="nameFilter">Name(이름):</label>
+                        <input type="text" id="nameFilter" placeholder="Search by Name">
+                    </div>
+                    <div class="filter-item">
+                        <label for="phoneType">Phone Type(폰종류):</label>
+                        <select id="phoneType">
+                            <option value="전체">All</option>
+                            <option value="1">iPhone</option>
+                            <option value="2">Galaxy</option>
+                            <option value="3">Other</option>
+                        </select>
+                    </div> -->
+                <div class="filter-item">
+                    <label for="passportFilter">Passport Number(여권번호):</label>
+                    <input type="text" id="passportFilter" placeholder="Search by Passport Number">
+                </div>
+                <!-- <div class="filter-item">
+                        <label for="phoneFilter">Phone Number(전화번호):</label>
+                        <input type="text" id="phoneFilter" placeholder="Search by Phone Number">
+                    </div> -->
+            </div>
+        </div>
+        <!--Third Row: Commit Date, Search, Reset -->
+        <div class="filter-row"
+            style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 5px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="commitDateFrom">Commit Date (확약일자):</label>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                    <input type="text" id="commitDateFrom" placeholder="YYMMDD" maxlength="6" pattern="\d{6}"
+                        style="width: 80px;">
+                    <span class="date-separator">~</span>
+                    <input type="text" id="commitDateTo" placeholder="YYMMDD" maxlength="6" pattern="\d{6}"
+                        style="width: 80px;">
+                </div>
+                <button id="searchButton" class="primary-button">Search (조회)</button>
+                <span class="record-count">Search Results: <strong id="totalRecords">0</strong></span>
+                <!-- </div>
+        </div>
+    </div> -->
+                <!-- 4번째 행 -->
+                <div class="button-row" style="display: flex; justify-content: flex-start; gap: 10px; margin-top: 5px;">
+                    <button id="excelInputButton" class="secondary-button">Excel Regist</button>
+                    <button id="depositCheckButton" class="secondary-button">Deposit Check</button>
+                    <button id="resetButton" class="secondary-button">Reset</button>
+                </div>
+                <!-- Hidden File Input -->
+                <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;">
+                <input type="file" id="depositCheckInput" accept=".xlsx, .xls" style="display: none;">
+
+            </div>
+
+            </script>
+        </div>
+
+        <div class="content">
+            <div id="list-view" class="list-view">
+                <table class="detailed-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nationality</th>
+                            <th>Name</th>
+                            <th>Visa Type</th>
+                            <th>Passport Number</th>
+                            <th>Phone Type</th>
+                            <th>Sim Price</th>
+                            <th>Balance</th>
+                            <th>Loan Preference</th>
+                            <th>Entry Date</th>
+                            <th>Phone Number2</th>
+                        </tr>
+                    </thead>
+                    <tbody id="records-list"></tbody>
+                </table>
+            </div>
+
+            <div id="detail-view" class="hidden">
+                <!-- <button id="back-button">Back to List</button> -->
+                <div id="detail-content"></div>
+            </div>
+        </div>
+    </div>
+    <div id="password-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>Password Confirmation</h2>
+            <p>Please enter your password to save changes.</p>
+            <input type="password" id="password-input" placeholder="Password">
+            <div class="modal-buttons">
+                <button id="confirm-password" class="primary-button">Confirm</button>
+                <button id="cancel-password" class="secondary-button">Cancel</button>
+            </div>
+        </div>
+    </div>
+    <!-- XLSX 라이브러리 추가 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- Your main.js 파일 추가 -->
+    <script src="js/main.js"></script>
+    <script src="js/excelRegist.js"></script>
+    <script src="js/depositCheck.js"></script>
+</body>
+
+</html>
