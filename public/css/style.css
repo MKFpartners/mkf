@@ -37,7 +37,41 @@ h1 {
     border-radius: 8px;
     margin-bottom: 20px;
 }
+.form-row {
+ display: flex; /* Flexbox 레이아웃 사용 */
+ margin-bottom: 8px; /* 각 행 사이의 간격 조절 */
+ align-items: center; /* 세로 방향으로 중앙 정렬 */
+}
 
+.form-label {
+ display: flex; /* Flexbox 레이아웃 사용 */
+ flex: 1; /* 타이틀 영역이 1의 비율을 차지 */
+ padding-right: 10px; /* 타이틀과 입력 필드 사이의 간격 */
+ text-align: left; /* <--- 여기를 right 에서 left 로 변경 */
+ font-weight: bold; /* 타이틀 강조 (선택 사항) */
+ align-items: center; /* 세로 방향으로 중앙 정렬 (선택 사항) */
+}
+
+
+.form-input {
+ flex: 2; /* 입력 필드 영역이 2의 비율을 차지 */
+}
+
+.form-control {
+ width: 100%; /* 입력 필드의 너비를 부모 요소에 맞춤 */
+ padding: 8px;
+ border: 1px solid #ccc;
+ border-radius: 4px;
+ box-sizing: border-box; /* padding과 border가 width에 포함되도록 설정 */
+}
+
+.input-field { /* select 박스에도 적용하기 위한 클래스 (선택 사항) */
+ width: 100%;
+ padding: 8px;
+ border: 1px solid #ccc;
+ border-radius: 4px;
+ box-sizing: border-box;
+}
 /* 필터 행 스타일 */
 
 .filter-row {
@@ -556,3 +590,92 @@ input[type="text"], select {
     justify-content: flex-end;
     gap: 1rem;
 } 
+.primary-button.inactive {
+  background-color: #cccccc; /* 비활성화된 배경색 */
+  color: #666666; /* 비활성화된 글자색 */
+  cursor: not-allowed; /* 마우스 커서 변경 */
+  border: 1px solid #cccccc; /* 비활성화된 테두리 색상 */
+}
+
+/* 기본 스타일 */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+}
+
+.records-list {
+  width: 100%;
+  overflow-x: auto; /* 테이블이 화면을 넘어갈 경우 스크롤 가능 */
+}
+
+.detail-view {
+  display: none;
+}
+
+.deposit-sum {
+  font-size: 1.2rem;
+  text-align: right;
+  margin-top: 10px;
+}
+
+/* 반응형 스타일 */
+@media (max-width: 768px) {
+  .container {
+    padding: 10px;
+  }
+
+  .records-list {
+    font-size: 0.9rem;
+  }
+
+  .deposit-sum {
+    font-size: 1rem;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form-label {
+    font-size: 0.9rem;
+  }
+
+  .form-input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    padding: 5px;
+  }
+
+  .records-list {
+    font-size: 0.8rem;
+  }
+
+  .deposit-sum {
+    font-size: 0.9rem;
+  }
+
+  .primary-button {
+    font-size: 0.8rem;
+    padding: 5px 10px;
+  }
+}
+
+/* 입금조회와 입금액 글자 크기 맞추기 */
+.deposit-sum {
+  font-size: 1rem; /* 입금조회와 동일한 크기로 설정 */
+}
+
+.deposit-check-label {
+  font-size: 1rem; /* 입금조회 글자 크기 */
+}
+/* 대출희망 오른쪽으로 20px 이동 */
+.loan-preference-label {
+  margin-left: 20px;
+}
