@@ -25,6 +25,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const checkboxes = document.querySelectorAll('input[type="checkbox"]') // 모든 체크박스
   const recordsList = document.getElementById('records-list') // 리스트의 목록
 
+  // Nationality의 기본값을 'Cambodia'로 설정
+  if (nationalitySelect) {
+    nationalitySelect.value = 'Cambodia'
+  }
+
   let currentRecord = null // 전역 변수로 선언
   // 오늘 날짜를 YYMMDD 형식으로 변환
   const today = new Date()
@@ -37,16 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // document.getElementById("commitDateFrom").value = formattedDate;
   document.getElementById('commitDateTo').value = formattedDate
 
-  /* 날짜 포맷팅 함수
-  function formatDate (dateString) {
-    if (!dateString) return '-'
-    const date = new Date(dateString)
-    const year = date.getFullYear().toString().slice(2)
-    const month = (date.getMonth() + 1).toString().padStart(2, '0')
-    const day = date.getDate().toString().padStart(2, '0')
-    return `${year}${month}${day}`
-  }*/
-
   // 목록 데이터 로드
   async function loadRecords (search_type) {
     try {
@@ -56,14 +51,23 @@ document.addEventListener('DOMContentLoaded', () => {
       const idValue = idFilter ? idFilter.value.trim() : ''
       console.log('loadRecords 시작')
       console.log('search_type = ', search_type)
+
       if (idValue) {
         // ID 값이 있으면 ID로만 조회
-        params.append('id', idValue)
+        params.append('id', Number(idValue))
       } else {
-        if (search_type === 2) {
-          // 대출희망 체크 시 visa_type을 'E9'로 고정
-          params.append('visa_type', 'E9')
+        //2: 대출희망, 4: 미입금조회
+        if (search_type === 2 || search_type === 4) {
+          // 입금액 초기화
+          const depositSumElement = document.getElementById('deposit-sum') // 입금액 표시 필드
+          console.log('depositSumElement:', depositSumElement) // 디버깅용 출력
+          if (depositSumElement) {
+            depositSumElement.textContent = '0' // 입금액 초기화
+          } else {
+            console.error('depositSumElement is not found in the DOM.')
+          }
         }
+
         if (nationalitySelect && nationalitySelect.value !== '전체') {
           params.append('nationality', nationalitySelect.value)
         }
@@ -79,9 +83,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (commitDateToInput.value.trim()) {
           params.append('commitDateTo', commitDateToInput.value.trim())
         }
+        // 대출희망 체크 시 visa_type을 'E9'로 고정
+        if (search_type === 2) {
+          //params.append('loan_pre_priority', '1')
+          params.append('visa_type', 'E9')
+        } else if (search_type === 4) {
+          // 미입금조회
+          params.append('deposit_amount_not', '0') // 'deposit_amount_not' 키로 전달
+        }
       }
-      console.log('params:', params.toString())
 
+      console.log('params:', params.toString())
       const response = await fetch(`/api/records?${params.toString()}`)
       const data = await response.json()
 
@@ -98,12 +110,12 @@ document.addEventListener('DOMContentLoaded', () => {
                           <td>${record.visa_type}</td>
                           <td>${record.passport_number}</td>
                           <td>${
-                            record.phone_type == 1
-                              ? '아이폰'
-                              : record.phone_type == 2
-                              ? '갤럭시'
-                              : record.phone_type == 3
-                              ? '기타'
+                            Number(record.phone_type) == 1
+                              ? 'iPhone'
+                              : Number(record.phone_type) == 2
+                              ? 'galaxy'
+                              : Number(record.phone_type) == 3
+                              ? 'etc'
                               : '-'
                           }</td>
                           <td>${record.sim_price}</td>
@@ -127,7 +139,6 @@ document.addEventListener('DOMContentLoaded', () => {
         recordsList.innerHTML =
           '<tr><td colspan="7">데이터가 없습니다.</td></tr>'
       }
-
       totalRecordsElement.textContent = data.length
     } catch (error) {
       console.error('데이터 로드 중 오류:', error)
@@ -150,7 +161,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(`/api/records/${id}`)
       if (!response.ok) throw new Error('데이터를 불러오는데 실패했습니다.')
 
+      // 기존 화면 초기화
+      detailContent.innerHTML = '' // 상세화면 컨텐츠 초기화
+      listView.classList.add('hidden') // 리스트 화면 숨기기
+      detailView.classList.add('hidden') // 상세화면 숨기기
+      containerDiv.style.display = 'none' // 상단 컨테이너 숨기기
+
       currentRecord = await response.json()
+      console.log('currentRecord=', currentRecord)
 
       const fieldMappings = {
         id: 'ID',
@@ -160,7 +178,8 @@ document.addEventListener('DOMContentLoaded', () => {
         passport_number: 'Passport Number (여권번호)',
         phone_type: 'Phone Type (폰종류)',
         sim_price: 'SIM Price ($) (유심비($))',
-        balance: '입금할 금액($)',
+        deposit_amount: 'Deposit Amount ($) (입금액($))',
+        balance: 'Balance ($) (입금할 금액($))',
         loan_pre_priority: 'Loan Preference (대출구분)',
         entry_date: 'Entry Date (한국입국날짜)',
         tel_number_cam: 'Phone Number (Cambodia) (전화번호(캄보디아))',
@@ -176,32 +195,24 @@ document.addEventListener('DOMContentLoaded', () => {
         participant_email: 'Participant Email (참여자 이메일)',
         additional_information: 'Additional Information (추가정보)'
       }
-      console.log('currentRecord:', currentRecord)
-      console.log('fieldMappings:', fieldMappings)
 
-      // Object.keys(currentRecord).forEach((key) => {
-      //   if (!fieldMappings[key]) {
-      //     console.warn(`fieldMappings에 누락된 키: ${key}`);
-      //   }
-      // });
       const nationalityOptions = [
-        'All(전체)',
-        'Cambodia(캄보디아)',
-        'Nepal(네팔)',
-        'Vietnam(베트남)',
-        'Philippine(필리핀)',
-        'Thailand(태국)',
-        'Mongolia(몽골)',
-        'Indonesia(인도네시아)',
-        'Sri Lanka(스리랑카)',
-        'Uzbekistan(우즈베키스탄)',
-        'Pakistan(파키스탄)',
-        'Myanmar(미얀마)',
-        'Kyrgyzstan(키르기스스탄)',
-        'Bangladesh(방글라데시)',
-        'Timor-Leste(동티모르)',
-        'Laos(라오스)',
-        'China(중국)'
+        'Cambodia',
+        'Nepal',
+        'Vietnam',
+        'Philippine',
+        'Thailand',
+        'Mongolia',
+        'Indonesia',
+        'Sri Lanka',
+        'Uzbekistan',
+        'Pakistan',
+        'Myanmar',
+        'Kyrgyzstan',
+        'Bangladesh',
+        'Timor-Leste',
+        'Laos',
+        'China'
       ]
 
       const visaTypeOptions = ['E9', 'E8']
@@ -212,11 +223,12 @@ document.addEventListener('DOMContentLoaded', () => {
         'format_name',
         'commit_status',
         'signature',
+        'sim_price',
+        'deposit_amount',
         'sender_name',
         'sender_email',
         'sent_date',
-        'participant_email',
-        'additional_information'
+        'participant_email'
       ]
 
       // 상단 요소들 숨기기
@@ -252,108 +264,187 @@ document.addEventListener('DOMContentLoaded', () => {
           currentRecord[key] = cleanDateField(currentRecord[key])
         }
       })
-      // field_update 필드 제거
-      //delete currentRecord.field_update;
       detailView.classList.remove('hidden')
       listView.classList.add('hidden')
 
       // 상세 조회 화면의 타이틀을 제거합니다.
       detailContent.innerHTML = ''
-      // 상세 정보 화면 표시
-      let detailFormHTML = `<form id="detailForm">`
-      detailFormHTML += `</form>
- <div class="button-container">
-  <button type="button" id="backToListButton" class="primary-button">목록</button>  
-  <button type="button" id="saveButton" class="primary-button">저장</button>
- </div> 
-`
-      detailContent.innerHTML = detailFormHTML
-      for (const key in fieldMappings) {
-        const label = fieldMappings[key]
-        const value =
-          currentRecord[key] !== undefined && currentRecord[key] !== null
-            ? currentRecord[key]
-            : ''
-        const isReadonly = readonlyFields.includes(key)
-        let inputHTML = ''
-        if (key === 'nationality') {
-          inputHTML = `
-     <select class="form-control input-field" id="${key}" name="${key}">
-      ${nationalityOptions
-        .map(
-          option =>
-            `<option value="${option.split('(')[0].toLowerCase()}" ${
-              currentRecord[key] === option.split('(')[0].toLowerCase()
-                ? 'selected'
-                : ''
-            }>${option}</option>`
-        )
-        .join('')}
-     </select>
-    `
-        } else if (key === 'visa_type') {
-          inputHTML = `
-     <select class="form-control input-field" id="${key}" name="${key}">
-      ${visaTypeOptions
-        .map(
-          option =>
-            `<option value="${option}" ${
-              currentRecord[key] === option ? 'selected' : ''
-            }>${option}</option>`
-        )
-        .join('')}
-     </select>
-    `
-        } else if (key === 'phone_type') {
-          inputHTML = `
-     <select class="form-control input-field" id="${key}" name="${key}">
-      <option value="1" ${
-        currentRecord[key] === 1 ? 'selected' : ''
-      }>아이폰</option>
-      <option value="2" ${
-        currentRecord[key] === 2 ? 'selected' : ''
-      }>갤럭시</option>
-      <option value="3" ${
-        currentRecord[key] === 3 ? 'selected' : ''
-      }>기타</option>
-      <option value="" ${
-        currentRecord[key] === null ? 'selected' : ''
-      }>-</option>
-     </select>
-    `
-        } else if (key === 'loan_pre_priority') {
-          inputHTML = `
-     <select class="form-control input-field" id="${key}" name="${key}">
-      <option value="1" ${
-        currentRecord[key] === 1 ? 'selected' : ''
-      }>우선희망</option>
-      <option value="2" ${
-        currentRecord[key] === 2 ? 'selected' : ''
-      }>희망</option>
-      <option value="3" ${
-        currentRecord[key] === 3 ? 'selected' : ''
-      }>안함</option>
-      <option value="" ${
-        currentRecord[key] === null ? 'selected' : ''
-      }>-</option>
-     </select>
-    `
-        } else {
-          inputHTML = `<input type="text" class="form-control input-field" id="${key}" name="${key}" value="${value}" ${
-            isReadonly ? 'readonly' : ''
-          }>`
-        }
 
-        detailFormHTML += `
-    <div class="form-row">
-     <div class="form-label">${label}:</div>
-     <div class="form-input">${inputHTML}</div>
-    </div>
-   `
-      }
-      detailFormHTML += `</form>`
+      detailContent.innerHTML = `
+                  <div class="detail-header" style="display: flex; justify-content: space-between; align-items: center;">
+   <button id="backToListButton" class="secondary-button">Return</button>                    
+                  <h2 style="text-align: center; flex-grow: 1;">Detailed Informations</h2>
+                  </div>
+                  <div class="detail-body">
+                      <form id="detailForm">
+                          <table class="detail-table">
+                              <tbody>
+                                  ${Object.entries(currentRecord)
+                                    .map(([key, value]) => {
+                                      const isReadonly =
+                                        readonlyFields.includes(key)
 
-      detailContent.innerHTML = detailFormHTML
+                                      if (key === 'id') {
+                                        return `
+                                              <tr>
+                                                   <td style="width: 30%; text-align: left; padding-right: 10px;">
+                      <strong>${fieldMappings[key] || key}</strong>
+                    </td>
+                    <td style="width: 70%;">
+                                                      <input 
+                                                          type="text" 
+                                                          name="${key}" 
+                                                          value="${value}" 
+                                                          style="width: 100%;" 
+                                                          readonly
+                                                      />
+                                                  </td>
+                                              </tr>
+                                          `
+                                      }
+                                      if (key === 'nationality') {
+                                        return `
+                  <tr>
+                    <td><strong>${fieldMappings[key] || key}</strong></td>
+                    <td>
+                      <select name="nationality" style="width: 100%;" ${
+                        isReadonly ? 'disabled' : ''
+                      }>
+                        ${nationalityOptions
+                          .map(option => {
+                            const optionValue = option.split('(')[0]
+                            return `<option value="${optionValue}" ${
+                              value === 'Cambodia' ? 'selected' : ''
+                            }>${option}</option>`
+                          })
+                          .join('')}
+                      </select>
+                    </td>
+                  </tr>
+                                        `
+                                      }
+                                      if (key === 'visa_type') {
+                                        return `
+                                          <tr>
+                                            <td><strong>${
+                                              fieldMappings[key] || key
+                                            }</strong></td>
+                                            <td>
+                                              <select name="visa_type" style="width: 100%;"
+                                              ${isReadonly ? 'disabled' : ''}>
+                                                ${visaTypeOptions
+                                                  .map(
+                                                    option =>
+                                                      `<option value="${option}" ${
+                                                        value === option
+                                                          ? 'selected'
+                                                          : ''
+                                                      }>${option}</option>`
+                                                  )
+                                                  .join('')}
+                                              </select>
+                                            </td>
+                                          </tr>
+                                        `
+                                      }
+                                      if (key === 'loan_pre_priority') {
+                                        return `
+                                          <tr>
+                                            <td style="width: 30%; text-align: left; padding-right: 10px;">
+        <strong>${fieldMappings[key] || key}</strong>
+      </td>
+      <td style="width: 70%;">
+                                              <select name="loan_pre_priority" style="width: 100%;"
+                                              ${isReadonly ? 'disabled' : ''}>
+                                                <option value="1" ${
+                                                  value == 1 ? 'selected' : ''
+                                                }>High Priority(우선희망)</option>
+                                                <option value="2" ${
+                                                  value == 2 ? 'selected' : ''
+                                                }>Preferred(희망)</option>
+                                                <option value="3" ${
+                                                  value == 3 ? 'selected' : ''
+                                                }>Not Interested(안함)</option>
+                                              </select>
+                                            </td>
+                                          </tr>
+                                        `
+                                      }
+                                      if (key === 'phone_type') {
+                                        return `
+                                          <tr>
+                                            <td style="width: 30%; text-align: left; padding-right: 10px;">
+        <strong>${fieldMappings[key] || key}</strong>
+      </td>
+      <td style="width: 70%;">
+                                              <select name="phone_type" style="width: 100%;"
+                                              ${isReadonly ? 'disabled' : ''}>
+                                                <option value="1" ${
+                                                  value == 1 ? 'selected' : ''
+                                                }>iPhone(아이폰)</option>
+                                                <option value="2" ${
+                                                  value == 2 ? 'selected' : ''
+                                                }>galaxy(갤럭시)</option>
+                                                <option value="3" ${
+                                                  value == 3 ? 'selected' : ''
+                                                }>else(기타)</option>
+                                              </select>
+                                            </td>
+                                          </tr>
+                                        `
+                                      }
+                                      const isDateField = [
+                                        'commit_date',
+                                        'sent_date',
+                                        'completion_date',
+                                        'entry_date',
+                                        'deposit_date'
+                                      ].includes(key)
+                                      return `
+                                          <tr>
+                                              <td><strong>${
+                                                fieldMappings[key] || key
+                                              }</strong></td>
+                                              <td>
+                                                  <input 
+                                                      type="text" 
+                                                      name="${key}" 
+                                                      value="${
+                                                        value !== null &&
+                                                        value !== undefined
+                                                          ? value
+                                                          : ''
+                                                      }" 
+                                                      style="width: 100%;"
+                                                      ${
+                                                        isReadonly
+                                                          ? 'disabled'
+                                                          : ''
+                                                      }
+                                                      ${
+                                                        isDateField
+                                                          ? 'oninput="this.value = this.value.replace(/[^0-9-: ]/g, \'\')"'
+                                                          : ''
+                                                      }
+                                                  />
+                                              </td>
+                                          </tr>
+                                      `
+                                    })
+                                    .join('')}
+                              </tbody>
+                          </table>
+                          <div class="button-group" style="margin-top: 20px;">
+                              <button type="button" id="saveButton" class="primary-button">Save(저장)</button>                            
+                              <button id="backToListButton2" class="secondary-button">Reset</button>                    
+                          </div>
+                      </form>
+                  </div>
+              `
+
+      // 디버깅: detailForm 확인
+      const detailForm = document.getElementById('detailForm')
+      //console.log('main.js: 디버깅 : detailForm:', detailForm)
 
       // "목록" 버튼 이벤트 리스너
       document
@@ -392,6 +483,12 @@ document.addEventListener('DOMContentLoaded', () => {
               return
             }
             const formData = new FormData(document.getElementById('detailForm'))
+            //console.log('main.js: formData:', formData)
+            // console.log(
+            //   'main.js: 디버깅 : formData:',
+            //   Array.from(formData.entries())
+            // ) // 디버깅용 출력
+
             const updatedData = {}
             formData.forEach((value, key) => {
               if (['commit_date', 'sent_date', 'entry_date'].includes(key)) {
@@ -403,7 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
               }
             })
 
-            console.log('수정 데이터:', updatedData)
+            console.log('main.js: 수정 데이터1:', updatedData)
 
             const response = await fetch(`/api/records/${currentRecord.id}`, {
               method: 'PUT',
@@ -422,7 +519,13 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         })
       }
-
+      // 숨길 행에 CSS 클래스 추가
+      const rows = detailContent.querySelectorAll('tr')
+      // rows.forEach((row, index) => {
+      //   if (index < 3) {
+      //     row.classList.add('hidden-row') // 1행, 2행, 3행에 hidden-row 클래스 추가
+      //   }
+      // })
       // 상세 조회 화면이 로드될 때 "Search (조회)" 버튼을 비활성화합니다.
       const searchButton = document.getElementById('searchButton')
       if (searchButton) {
@@ -437,10 +540,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 초기화 버튼 클릭 이벤트
   resetButton.addEventListener('click', () => {
+    idFilter.value = ''
     nationalitySelect.value = '전체'
     //visaTypeSelect.value = '전체'
     commitDateFromInput.value = ''
-    commitDateToInput.value = ''
+    //commitDateToInput.value = ''
     nameFilter.value = ''
     passportFilter.value = ''
     // phoneFilter.value = ''
@@ -477,21 +581,38 @@ document.addEventListener('DOMContentLoaded', () => {
   // 조회 버튼 클릭 이벤트
   searchButton.addEventListener('click', async () => {
     // 체크박스 상태 확인
-    const depositCheck = document.getElementById('depositCheck')
-    const loanPreferenceCheck = document.getElementById('loanPreferenceCheck')
+    const depositCheck = document.getElementById('depositCheck') // 입금조회
+    const loanPreferenceCheck = document.getElementById('loanPreferenceCheck') // 대출요청
     const depositSumElement = document.getElementById('deposit-sum') // 입금액 표시 필드
+    const nodepositCheck = document.getElementById('nodepositCheck')
     console.log('depositSumElement:', depositSumElement)
-    if (depositCheck.checked && loanPreferenceCheck.checked) {
-      alert('하나만 체크하세요')
+
+    if (
+      (depositCheck.checked && loanPreferenceCheck.checked) ||
+      (depositCheck.checked && nodepositCheck.checked) ||
+      (loanPreferenceCheck.checked && nodepositCheck.checked)
+    ) {
+      alert('하나만 선택하세요')
       return // 조회 로직 실행 중단
     }
 
     if (depositCheck.checked) {
+      if (!passwordCheck()) {
+        return // 암호 확인 실패 시 작업 중단
+      }
       window.search_type = 1 // 입금조회 체크 시
     } else if (loanPreferenceCheck.checked) {
-      window.search_type = 2 // 대출희망 체크 시
+      if (!passwordCheck()) {
+        return // 암호 확인 실패 시 작업 중단
+      }
+      window.search_type = 2 // 대출요청 체크 시
+    } else if (nodepositCheck.checked) {
+      if (!passwordCheck()) {
+        return // 암호 확인 실패 시 작업 중단
+      }
+      window.search_type = 4 // 비입금조회
     } else {
-      window.search_type = 0 // 둘 다 체크되지 않은 경우
+      window.search_type = 3 // 둘 다 체크되지 않은 경우
     }
     console.log(`search_type: ${window.search_type}`) // 디버깅용 출력
 
@@ -506,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
         const data = await response.json()
-        console.log('Response data:', data) // 서버에서 반환된 데이터 확인
+        console.log('Response data:', data.length, ' 건') // 서버에서 반환된 데이터 확인
 
         // deposit_sum 값 추출
         const depositSum = data[0]?.deposit_sum || 0 // 첫 번째 레코드에서 deposit_sum 추출
@@ -515,6 +636,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const depositSumElement = document.getElementById('deposit-sum') // 입금액 표시 필드
         if (depositSumElement) {
           depositSumElement.textContent = depositSum // 합계를 표시
+          loadRecords(window.search_type)
         } else {
           console.error('depositSumElement is not found in the DOM.')
         }
@@ -528,3 +650,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   })
 })
+function passwordCheck () {
+  const password = prompt('암호를 입력하십시오:')
+  if (password === null) {
+    // 사용자가 Cancel을 눌렀을 경우
+    alert('작업이 취소되었습니다.')
+    return false
+  }
+  if (password !== '2233') {
+    alert('잘못된 암호입니다. 작업이 취소되었습니다.')
+    return false
+  }
+  return true
+}

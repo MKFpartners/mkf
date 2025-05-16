@@ -57,25 +57,28 @@ app.get('/health', (req, res) => {
 // 전체 목록 또는 필터링된 목록 조회
 app.get('/api/records', async (req, res) => {
   try {
-    console.log('Records request received:', req.query) // 요청 로깅
+    console.log('서버에서 수신한 request:', req.query) // 요청 로깅
     const {
       id = null,
-      nationality = '전체',
+      nationality = 'Cambodia',
       name = '',
       passport_number = '',
       visa_type = '전체',
       commitDateFrom = null,
-      commitDateTo = null
-      //search_type = 0
+      commitDateTo = null,
+      search_type = 0
     } = req.query
 
     let query = 'SELECT * FROM mkf_master'
     let conditions = []
     let values = []
     let paramCount = 1
-
+    // 미입금 조회 search_type =4, balance != 0
+    if (req.query.deposit_amount_not) {
+      conditions.push(`balance != 0`)
+    }
     function addCondition (field, value, operator = '=') {
-      if (value && value !== '전체') {
+      if (value && value !== '전체' && value !== 'All') {
         conditions.push(`${field} ${operator} $${paramCount}`)
         values.push(value)
         paramCount++
@@ -104,51 +107,57 @@ app.get('/api/records', async (req, res) => {
       )
     }
 
+    function addCondition (field, value, operator = '=') {
+      if (value && value !== '전체' && value !== 'All') {
+        conditions.push(`${field} ${operator} $${paramCount}`)
+        values.push(value)
+        paramCount++
+      }
+    }
+
     if (id) {
       addCondition('id', id)
     } else {
-      addCondition('nationality', nationality)
       addCondition('passport_name', name)
       addCondition('passport_number', passport_number)
       addCondition('visa_type', visa_type)
-    }
-    if (nationality && nationality !== '전체') {
-      conditions.push(`nationality = $${paramCount}`)
-      values.push(nationality)
-      paramCount++
-    }
 
-    if (name && name !== '') {
-      conditions.push(`passport_name = $${paramCount}`)
-      values.push(name)
-      paramCount++
-    }
+      if (nationality && nationality !== 'All') {
+        addCondition('nationality', nationality)
+      }
 
-    if (commitDateFrom) {
-      const dateStr = parseAndValidateDate(commitDateFrom)
-      if (dateStr) {
-        conditions.push(`DATE(commit_date) >= $${paramCount}`)
-        values.push(dateStr)
+      if (name && name !== '') {
+        conditions.push(`passport_name = $${paramCount}`)
+        values.push(name)
         paramCount++
       }
-    }
 
-    if (commitDateTo) {
-      const dateStr = parseAndValidateDate(commitDateTo)
-      if (dateStr) {
-        conditions.push(`DATE(commit_date) <= $${paramCount}`)
-        values.push(dateStr)
-        paramCount++
+      if (commitDateFrom) {
+        const dateStr = parseAndValidateDate(commitDateFrom)
+        if (dateStr) {
+          conditions.push(`DATE(commit_date) >= $${paramCount}`)
+          values.push(dateStr)
+          paramCount++
+        }
+      }
+
+      if (commitDateTo) {
+        const dateStr = parseAndValidateDate(commitDateTo)
+        if (dateStr) {
+          conditions.push(`DATE(commit_date) <= $${paramCount}`)
+          values.push(dateStr)
+          paramCount++
+        }
       }
     }
-    const search_type = parseInt(req.query.search_type || '0', 10) // 문자열을 숫자로 변환
+    //const search_type = parseInt(req.query.search_type || '0', 10) // 문자열을 숫자로 변환
     if (search_type == 1) {
-      console.log('Executing deposit sum query...')
+      console.log('Executing deposit sum query select_type = 1...')
       // 입금조회일 경우 합계 데이터를 포함한 쿼리
       query = `
         SELECT 
         id, nationality, passport_name, visa_type, passport_number, sim_price, 
-        balance, loan_pre_priority, entry_date, tel_number_kor,
+        deposit_amount, balance, loan_pre_priority, entry_date, tel_number_kor,
         NULL AS deposit_sum
         FROM mkf_master
         ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
@@ -160,6 +169,7 @@ app.get('/api/records', async (req, res) => {
           NULL AS visa_type,
           NULL AS passport_number,
           NULL AS sim_price,
+          NULL AS deposit_amount,
           NULL AS balance,
           NULL AS loan_pre_priority,
           NULL AS entry_date,
@@ -172,15 +182,18 @@ app.get('/api/records', async (req, res) => {
     } else {
       // 일반 조회 쿼리
       query = `
-        SELECT id, nationality, passport_name, visa_type, passport_number, sim_price, balance, loan_pre_priority, entry_date, tel_number_kor
+        SELECT id, nationality, passport_name, visa_type, passport_number, phone_type, 
+        sim_price, deposit_amount, balance, loan_pre_priority, entry_date, tel_number_kor
         FROM mkf_master
         ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
         ORDER BY id DESC
       `
     }
-    console.log('Executing query:', query, 'with values:', values) // 쿼리 로깅
+    console.log('서버의 query:', query, 'with values:', values) // 쿼리 로깅
     const result = await pool.query(query, values)
     console.log(`Found ${result.rows.length} records`) // 결과 로깅
+    console.log('Generated query:', query)
+    console.log('Query parameters:', values)
     res.json(result.rows)
   } catch (err) {
     console.error('Error in /api/records:', err)
@@ -215,7 +228,7 @@ app.put('/api/records/:id', async (req, res) => {
   try {
     const { id } = req.params
     const updateData = req.body
-
+    console.log('server.js : Received updateData:', updateData)
     // 날짜 필드 정리 및 검증
     ;[
       'commit_date',
@@ -260,6 +273,8 @@ app.put('/api/records/:id', async (req, res) => {
     // phone_type 기본값 설정
     if (updateData.phone_type === undefined || updateData.phone_type === null) {
       updateData.phone_type = 0 // 기본값
+    } else {
+      updateData.phone_type = Number(updateData.phone_type) // 숫자로 변환
     }
 
     // loan_pre_priority 기본값 설정
@@ -289,7 +304,7 @@ app.put('/api/records/:id', async (req, res) => {
       .map((key, index) => `${key} = $${index + 2}`)
       .join(', ')
     const values = Object.values(updateData)
-
+    console.log('values = ', values)
     const query = `
       UPDATE mkf_master 
       SET ${setClause}
@@ -297,7 +312,8 @@ app.put('/api/records/:id', async (req, res) => {
       RETURNING *
     `
     const result = await pool.query(query, [id, ...values])
-
+    console.log('query = ', query)
+    //console.log('result = ', result)
     if (result.rows.length === 0) {
       res.status(404).json({ error: '데이터를 찾을 수 없습니다.' })
       return
@@ -318,9 +334,13 @@ app.post('/execute-query', async (req, res) => {
 
   try {
     await client.query('BEGIN') // 트랜잭션 시작
-
     for (const query of queries) {
-      await client.query(query) // 각 쿼리를 실행
+      // commit_date가 NULL인 경우 기본값 설정
+      const updatedQuery = query.replace(
+        /commit_date\s*=\s*null/gi,
+        'commit_date = CURRENT_TIMESTAMP'
+      )
+      await client.query(updatedQuery) // 각 쿼리를 실행
     }
 
     await client.query('COMMIT') // 모든 쿼리가 성공하면 커밋

@@ -675,7 +675,11 @@ input[type="text"], select {
 .deposit-check-label {
   font-size: 1rem; /* 입금조회 글자 크기 */
 }
-/* 대출희망 오른쪽으로 20px 이동 */
+/* 대출요청 오른쪽으로 20px 이동 */
 .loan-preference-label {
   margin-left: 20px;
+}
+
+.hidden-row {
+  display: none;
 }

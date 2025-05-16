@@ -9,6 +9,7 @@
   "dependencies": {
     "dotenv": "^10.0.0",
     "express": "^4.21.2",
+    "pdfjs-dist": "^5.2.133",
     "pg": "^8.15.6"
   },
   "keywords": [],

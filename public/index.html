@@ -20,78 +20,75 @@
                     <input type="text" id="idFilter" placeholder="Search by ID">
                 </div>
                 <div class="filter-item">
-                    <label for="nationality">Nationality(국적):</label>
+                    <label for="nationality">Nationality:</label>
                     <select id="nationality">
-                        <option value="전체">All</option>
-                        <option value="캄보디아">Cambodia</option>
-                        <option value="네팔">Nepal</option>
-                        <option value="베트남">Vietnam</option>
-                        <option value="필리핀">Philippines</option>
-                        <option value="태국">Thailand</option>
-                        <option value="몽골">Mongolia</option>
-                        <option value="인도네시아">Indonesia</option>
-                        <option value="스리랑카">Sri Lanka</option>
-                        <option value="우즈베키스탄">Uzbekistan</option>
-                        <option value="파키스탄">Pakistan</option>
-                        <option value="미얀마">Myanmar</option>
-                        <option value="키르기스스탄">Kyrgyzstan</option>
-                        <option value="방글라데시">Bangladesh</option>
-                        <option value="동티모르">East Timor</option>
-                        <option value="라오스">Laos</option>
-                        <option value="중국">China</option>
+                        <option value="All">All</option>
+                        <option value="Cambodia">Cambodia</option>
+                        <option value="Nepal">Nepal</option>
+                        <option value="Vietnam">Vietnam</option>
+                        <option value="Philippines">Philippines</option>
+                        <option value="Thailand">Thailand</option>
+                        <option value="Mongolia">Mongolia</option>
+                        <option value="Indonesia">Indonesia</option>
+                        <option value="Sri Lanka">Sri Lanka</option>
+                        <option value="Uzbekistan">Uzbekistan</option>
+                        <option value="Pakistan">Pakistan</option>
+                        <option value="Myanmar">Myanmar</option>
+                        <option value="Kyrgyzstan">Kyrgyzstan</option>
+                        <option value="Bangladesh">Bangladesh</option>
+                        <option value="East Timor">East Timor</option>
+                        <option value="Laos">Laos</option>
+                        <option value="China">China</option>
                     </select>
                 </div>
 
                 <div class="filter-item">
-                    <label for="nameFilter">Name(이름):</label>
+                    <label for="nameFilter">Name:</label>
                     <input type="text" id="nameFilter" placeholder="Search by Name">
                 </div>
 
                 <div class="filter-item">
-                    <label for="passportFilter">Passport Number(여권번호):</label>
+                    <label for="passportFilter">Passport Number:</label>
                     <input type="text" id="passportFilter" placeholder="Search by Passport Number">
                 </div>
             </div>
         </div>
         <!--2nd Row: Commit Date, Search, Reset -->
-        <div class="filter-row"
-            style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 5px;">
-            <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="filter-row" style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+            <div style="display: flex; align-items: center; gap: 5px;">
                 <label for="commitDateFrom">Commit Date (확약일자):</label>
-                <div style="display: flex; align-items: center; gap: 5px;">
-                    <input type="text" id="commitDateFrom" placeholder="YYMMDD" maxlength="6" pattern="\d{6}"
-                        style="width: 80px;">
-                    <span class="date-separator">~</span>
-                    <input type="text" id="commitDateTo" placeholder="YYMMDD" maxlength="6" pattern="\d{6}"
-                        style="width: 80px;">
-                </div>
-                <button id="searchButton" class="primary-button">Search (조회)</button>
-
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <label class="deposit-check-label" for="depositCheck">입금조회</label>
-                    <input type="checkbox" id="depositCheck" />
-                    <span class="deposit-sum">
-                        입금액: <strong id="deposit-sum">0</strong>
-                    </span>
-                    <label class="loan-preference-label" for="loanPreferenceCheck">대출희망</label>
-                    <input type="checkbox" id="loanPreferenceCheck" />
-                </div>
+                <input type="text" id="commitDateFrom" placeholder="YYMMDD" maxlength="6" pattern="\d{6}"
+                    style="width: 80px;">
+                <span class="date-separator">~</span>
+                <input type="text" id="commitDateTo" placeholder="YYMMDD" maxlength="6" pattern="\d{6}"
+                    style="width: 80px;">
             </div>
-            <span class="record-count" style="margin-left: auto;">Search Results: <strong
-                    id="totalRecords">0</strong></span>
+            <button id="searchButton" class="primary-button">Search (조회)</button>
+            <span class="record-count">Search Results: <strong id="totalRecords">0</strong></span>
 
-            <div class="button-row" style="display: flex; justify-content: flex-start; gap: 10px; margin-top: 5px;">
-                <button id="excelInputButton" class="secondary-button">Excel Regist</button>
-                <button id="depositCheckButton" class="secondary-button">Deposit Check</button>
-                <button id="resetButton" class="secondary-button">Reset</button>
+            <div style="display: flex; align-items: center; gap: 10px; margin-left: 10px;">
+                <label class="deposit-check-label" for="depositCheck">입금조회</label>
+                <input type="checkbox" id="depositCheck" />
+                <span class="deposit-sum">
+                    입금액: <strong id="deposit-sum">0</strong>
+                </span>
+                <label class="nodeposit-check-label" for="noepositCheck">미입금조회</label>
+                <input type="checkbox" id="nodepositCheck" />
+                <label class="loan-preference-label" for="loanPreferenceCheck">대출요청</label>
+                <input type="checkbox" id="loanPreferenceCheck" />
             </div>
-            <!-- Hidden File Input -->
-            <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;">
-            <input type="file" id="depositCheckInput" accept=".xlsx, .xls" style="display: none;">
-
         </div>
-
-        </script>
+        <div class="button-row" style="display: flex; justify-content: flex-start; gap: 10px; margin-top: 5px;">
+            <button id="excelInputButton" class="secondary-button">Excel Regist</button>
+            <button id="depositCheckButton" class="secondary-button">Excel Deposit</button>
+            <button id="pdfDepositButton" class="secondary-button">PDF Deposit</button>
+            <button id="resetButton" class="secondary-button">Reset</button>
+        </div>
+        <!-- Hidden File Input -->
+        <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;">
+        <input type="file" id="depositCheckInput" accept=".xlsx, .xls" style="display: none;">
+        <input type="file" id="pdfDepositButton" accept=".pdf" style="display: none;">
+    </div>
     </div>
 
     <div class="content">
@@ -122,23 +119,17 @@
         </div>
     </div>
     </div>
-    <div id="password-modal" class="modal hidden">
-        <div class="modal-content">
-            <h2>Password Confirmation</h2>
-            <p>Please enter your password to save changes.</p>
-            <input type="password" id="password-input" placeholder="Password">
-            <div class="modal-buttons">
-                <button id="confirm-password" class="primary-button">Confirm</button>
-                <button id="cancel-password" class="secondary-button">Cancel</button>
-            </div>
-        </div>
-    </div>
+
     <!-- XLSX 라이브러리 추가 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Your main.js 파일 추가 -->
     <script src="js/main.js"></script>
     <script src="js/excelRegist.js"></script>
+    <script src="js/excelTelecom.js"></script>
     <script src="js/depositCheck.js"></script>
+    <script src="js/pdfDepositCheck.js"></script>
 </body>
 
 </html>
