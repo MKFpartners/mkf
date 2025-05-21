@@ -1,6 +1,5 @@
 // Import from Deposit Check Button Click Event
-document.getElementById('depositCheckButton').addEventListener('click', () => {
-
+document.getElementById('bankDepositButton').addEventListener('click', () => {
   const password = prompt('암호를 입력하십시오:')
   if (password === null) {
     // 사용자가 Cancel을 눌렀을 경우
@@ -11,7 +10,7 @@ document.getElementById('depositCheckButton').addEventListener('click', () => {
     alert('잘못된 암호입니다. 작업이 취소되었습니다.')
     return
   }
-  const fileInput = document.getElementById('depositCheckInput')
+  const fileInput = document.getElementById('bankDepositInput')
   if (fileInput) {
     fileInput.click()
   } else {
@@ -21,7 +20,7 @@ document.getElementById('depositCheckButton').addEventListener('click', () => {
 
 // File Selection Event
 document
-  .getElementById('depositCheckInput')
+  .getElementById('bankDepositInput')
   .addEventListener('change', async event => {
     const file = event.target.files[0]
 
@@ -38,41 +37,43 @@ document
           const workbook = XLSX.read(data, { type: 'array' })
           const sheetName = workbook.SheetNames[0]
           const sheet = workbook.Sheets[sheetName]
-          const rows = XLSX.utils.sheet_to_json(sheet)
+          const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 })
 
-          // 누락된 데이터가 있는 행을 필터링
-          const filteredRows = rows.filter(row => {
-            const depositAmount = row['입금액(원)']
-            if (!depositAmount) {
-              console.log('누락된 데이터가 있는 행을 건너뜁니다:', row)
-              return false // 누락된 데이터가 있는 행은 제외
+          // 26번째 행(0-based 25)이 헤더, 27번째 행부터 데이터
+          const headerRow = rows[25]
+          const dataRows = rows.slice(26)
+
+          const filteredRows = []
+          for (const rowArr of dataRows) {
+            const rowObj = {}
+            headerRow.forEach((col, idx) => {
+              rowObj[col] = rowArr[idx]
+            })
+            // Transaction Date에 'Total'이 있으면 프로그램 종료
+            if (
+              rowObj['Transaction Date'] &&
+              rowObj['Transaction Date'].toString().includes('Total')
+            ) {
+              console.log('Total 행을 만나 프로그램을 종료합니다.')
+              break
             }
-            return true
-          })
-          // SQL 업데이트 쿼리 생성
-          const updates = filteredRows.map(row => {
-            const senderOrReceiver = row['보낸분/받는분']
-            const depositAmount = row['입금액(원)']
-            const transactionDate = row['거래일시']
-            const branch = row['처리점']
-            return `
-UPDATE mkf_master
-SET 
-    deposit_amount = ${depositAmount},
-    deposit_date = '${transactionDate}',
-    branch = '${branch}',
-    balance = sim_price - ${depositAmount}
-WHERE 
-    passport_name = '${senderOrReceiver}' 
-    AND id = (
-        SELECT MAX(id) 
-        FROM mkf_master 
-        WHERE passport_name = '${senderOrReceiver}'
-        AND field_update IS NOT NULL
-    );    
-`
-          })
+            filteredRows.push(rowObj)
+          }
 
+          const updates = filteredRows.map(row => {
+            const senderOrReceiver = row['Sender']
+            const depositAmount = row['Money In']
+            const transactionDate = row['Transaction Date']
+            const branch = 'ABA Bank'
+            return `
+            SELECT update_deposit_mkf (
+                '${senderOrReceiver}',
+                 ${depositAmount},
+                '${transactionDate}',
+                '${branch}'
+            );
+            `
+          })
           console.log('Generated SQL Updates:', updates.join('\n'))
           await executeUpdates(updates)
         } catch (error) {
@@ -103,18 +104,26 @@ async function executeUpdates (updates) {
       body: JSON.stringify({ queries: updates })
     })
 
-    console.log('서버 응답 상태:', response.status) // 응답 상태 코드 확인
-
     if (!response.ok) {
       console.error('서버 응답 오류:', response.status, response.statusText)
       alert(`서버 오류: ${response.statusText}`)
       return
     }
+    const result = await response.json()
+    showResultModal(result)
 
-    const message = await response.text()
-    alert(message)
+    // const message = await response.text()
+    // alert(message)
   } catch (error) {
     console.error('Error executing updates:', error)
     alert('서버와의 통신 중 오류가 발생했습니다.')
   }
+}
+function showResultModal (result) {
+  alert(
+    `결과: ${result.result}\n` +
+      `mkf_master 수정 건수: ${result.mkf_master_count}\n` +
+      `error_table 입력 건수: ${result.error_table_count}\n` +
+      (result.error_count > 0 ? `에러 건수: ${result.error_count}` : '')
+  )
 }

@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
                           .map(option => {
                             const optionValue = option.split('(')[0]
                             return `<option value="${optionValue}" ${
-                              value === 'Cambodia' ? 'selected' : ''
+                              value === 'optionValue' ? 'selected' : ''
                             }>${option}</option>`
                           })
                           .join('')}
@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 }>galaxy(갤럭시)</option>
                                                 <option value="3" ${
                                                   value == 3 ? 'selected' : ''
-                                                }>else(기타)</option>
+                                                }>etc(기타)</option>
                                               </select>
                                             </td>
                                           </tr>

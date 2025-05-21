@@ -330,29 +330,92 @@ app.put('/api/records/:id', async (req, res) => {
 // SQL 쿼리 실행 API
 app.post('/execute-query', async (req, res) => {
   const { queries } = req.body // 여러 쿼리를 배열로 받음
-  const client = await pool.connect() // 트랜잭션을 위해 클라이언트 연결
+  let errorCount = 0
+  let errorList = []
 
-  try {
-    await client.query('BEGIN') // 트랜잭션 시작
-    for (const query of queries) {
-      // commit_date가 NULL인 경우 기본값 설정
-      const updatedQuery = query.replace(
-        /commit_date\s*=\s*null/gi,
-        'commit_date = CURRENT_TIMESTAMP'
-      )
-      await client.query(updatedQuery) // 각 쿼리를 실행
+  //const client = await pool.connect() // 트랜잭션을 위해 클라이언트 연결
+  //---------------------------------
+
+  for (const query of queries) {
+    try {
+      await pool.query(query)
+    } catch (err) {
+      errorCount++
+      errorList.push({
+        error_code: err.code || 'UNKNOWN',
+        message: err.message
+      })
     }
+  }
+  // 쿼리 실행 후 각 테이블의 건수 조회
+  const [mkfResult, errorResult] = await Promise.all([
+    pool.query(
+      'SELECT COUNT(*) FROM mkf_master WHERE commit_date::date = CURRENT_DATE'
+    ),
+    pool.query(
+      'SELECT COUNT(*) FROM error_table WHERE commit_date::date = CURRENT_DATE'
+    )
+  ])
+  const mkfCount = mkfResult.rows[0].count
+  const errorTableCount = errorResult.rows[0].count
 
-    await client.query('COMMIT') // 모든 쿼리가 성공하면 커밋
-    res.status(200).send(`입력이 완료되었습니다 : ${queries.length}건`)
-  } catch (error) {
-    await client.query('ROLLBACK') // 실패 시 롤백
-    console.error('Error executing queries:', error)
-    res.status(500).send(`입력이 실패하였습니다 : ${queries.length}건`)
-  } finally {
-    client.release() // 클라이언트 연결 해제
+  if (errorCount > 0) {
+    res.status(207).json({
+      result: 'partial_fail',
+      error_count: errorCount,
+      errors: errorList,
+      mkf_master_count: mkfCount,
+      error_table_count: errorTableCount
+    })
+  } else {
+    res.json({
+      result: 'success',
+      error_count: 0,
+      mkf_master_count: mkfCount,
+      error_table_count: errorTableCount
+    })
   }
 })
+
+//------------------------------
+//   try {
+//     //await client.query('BEGIN') // 트랜잭션 시작
+//     for (const query of queries) {
+//       try {
+//         await pool.query(query) // 각 쿼리를 실행
+//       } catch (err) {
+//         errorCount++;
+//         errorList.push({
+//           error_code: err.code || 'UNKNOWN',
+//           message: err.message
+//         });
+//       // commit_date가 NULL인 경우 기본값 설정
+//       const updatedQuery = query.replace(
+//         /commit_date\s*=\s*null/gi,
+//         'commit_date = CURRENT_TIMESTAMP'
+//       )
+//       //await client.query(updatedQuery) // 각 쿼리를 실행
+//     }
+
+// if (errorCount > 0) {
+//     res.status(207).json({
+//       result: 'partial_fail',
+//       error_count: errorCount,
+//       errors: errorList
+//     });
+//   } else {
+//     res.json({ result: 'success', error_count: 0 });
+//   }
+//     //await client.query('COMMIT') // 모든 쿼리가 성공하면 커밋
+//     res.status(200).send(`입력이 완료되었습니다 : ${queries.length}건`)
+//   // } catch (error) {
+//   //   //await client.query('ROLLBACK') // 실패 시 롤백
+//   //   console.error('Error executing queries:', error)
+//   //   res.status(500).send(`입력이 실패하였습니다 : ${queries.length}건`)
+//   // } finally {
+//   //   client.release() // 클라이언트 연결 해제
+//   // }
+// });
 
 // 서버 시작
 app.listen(port, () => {

@@ -27,15 +27,7 @@ document
       alert('파일이 선택되지 않았습니다.')
       return
     }
-
-    // 파일 이름 확인
-    if (file.name === 'telOnly_new_merged.xlsx') {
-      // excelTelecom.js 호출
-      console.log('Calling excelTelecom.js for file:', file.name)
-      const telecomModule = await import('./excelTelecom.js')
-      telecomModule.processTelecomFile(file) // excelTelecom.js에서 processTelecomFile 함수 호출
-      return
-    }
+    alert('파일이 선택되었습니다. 처리 중입니다...')
     try {
       const reader = new FileReader()
       reader.onload = async e => {
@@ -55,20 +47,34 @@ document
                 : row['phone_type-etc'] === 'true'
                 ? 3
                 : 0
+            const loan_pre_priority =
+              'loan_pre_priority-Yes' in row
+                ? row['loan_pre_priority-Yes'] === 'true'
+                  ? 1
+                  : 2
+                : 3
+            const visaType =
+              loan_pre_priority === 1 || loan_pre_priority === 2
+                ? 'E9'
+                : row['visa_type-E9'] === 'true'
+                ? 'E9'
+                : 'E8'
 
-            const visaType = row['visa_type-E9'] === 'true' ? 'E9' : 'E8'
             const commit_date = new Date().toISOString()
+            console.log('excelRegist.js commit_date=', commit_date)
+            //return `
+            // insert into mkf_master (
+            //     format_name, commit_Id, commit_name, commit_type, commit_status,
+            //     signature_order, sender_name, sender_email, sent_date, completion_date,
+            //     additional_information, participant_name, participant_email, participant_mobile_phone,
+            //     entry_date, loan_pre_priority, passport_name, passport_number, phone_type, tel_number, visa_type,commit_date
+            // ) VALUES (
             return `
-  INSERT INTO mkf_master (
-      format_name, commit_Id, commit_name, commit_type, commit_status,
-      signature_order, sender_name, sender_email, sent_date, completion_date,
-      additional_information, participant_name, participant_email, participant_mobile_phone,
-      entry_date, passport_name, passport_number, phone_type, tel_number, visa_type,commit_date
-  ) VALUES (
-      '${row['서식명']}', '${row['계약ID']}', '${row['계약명']}', '${row['계약종류']}', '${row['계약상태']}',
+            select insert_into_mkf_master
+     ( '${row['서식명']}', '${row['계약ID']}', '${row['계약명']}', '${row['계약종류']}', '${row['계약상태']}',
       '${row['서명순서']}', '${row['발송자명']}', '${row['발송자 이메일']}', '${row['발송일']}', '${row['완료일']}',
       '${row['추가정보']}', '${row['참여자명']}', '${row['참여자 이메일']}', '${row['참여자 핸드폰']}',
-      '${row['entry_date']}', '${row['passport_name']}', '${row['passport_number']}', 
+      '${row['entry_date']}', ${loan_pre_priority},'${row['passport_name']}', '${row['passport_number']}', 
       ${phoneType}, '${row['tel_number']}', '${visaType}', '${commit_date}'
   );
           `
@@ -99,13 +105,26 @@ async function executeQueries (queries) {
   try {
     const response = await fetch('http://localhost:3000/execute-query', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ queries })
     })
-
-    console.log('서버 응답 상태:', response.status) // 응답 상태 코드 확인
+    const result = await response.json()
+    showResultModal(result)
+  } catch (error) {
+    console.error('Error executing queries:', error)
+    alert('서버와의 통신 중 오류가 발생했습니다.')
+  }
+}
+function showResultModal (result) {
+  alert(
+    `결과: ${result.result}\n` +
+      `mkf_master 입력 건수: ${result.mkf_master_count}\n` +
+      `error_table 입력 건수: ${result.error_table_count}\n` +
+      (result.error_count > 0 ? `에러 건수: ${result.error_count}` : '')
+  )
+}
+/*await executeQueries(queries);
+ /*   console.log('서버 응답 상태:', response.status) // 응답 상태 코드 확인
 
     if (!response.ok) {
       console.error('서버 응답 오류:', response.status, response.statusText)
@@ -120,4 +139,4 @@ async function executeQueries (queries) {
     console.error('Error executing queries:', error)
     alert('서버와의 통신 중 오류가 발생했습니다.')
   }
-}
+} */

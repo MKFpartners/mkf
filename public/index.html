@@ -81,16 +81,43 @@
         <div class="button-row" style="display: flex; justify-content: flex-start; gap: 10px; margin-top: 5px;">
             <button id="excelInputButton" class="secondary-button">Excel Regist</button>
             <button id="depositCheckButton" class="secondary-button">Excel Deposit</button>
-            <button id="pdfDepositButton" class="secondary-button">PDF Deposit</button>
+            <button id="bankDepositButton" class="secondary-button">Bank Deposit</button>
             <button id="resetButton" class="secondary-button">Reset</button>
+            <button id="compareButton" class="secondary-button">Compare</button>
         </div>
         <!-- Hidden File Input -->
         <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;">
         <input type="file" id="depositCheckInput" accept=".xlsx, .xls" style="display: none;">
-        <input type="file" id="pdfDepositButton" accept=".pdf" style="display: none;">
+        <input type="file" id="bankDepositInput" accept=".xlsx, .xls, .csv" style="display: none;">
     </div>
     </div>
-
+    <!-- Compare 화면 모달 추가 -->
+    <div id="compareModal"
+        style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:10000; align-items:center; justify-content:center;">
+        <div
+            style="background:#fff; border-radius:10px; padding:24px 0; min-width:60vw; max-width:95vw; min-height:60vh; max-height:90vh; box-shadow:0 4px 24px #0002; position:relative; display:flex; flex-direction:row;">
+            <button onclick="document.getElementById('compareModal').style.display='none'"
+                style="position:absolute; right:16px; top:12px; background:none; border:none; font-size:20px; cursor:pointer; z-index:10;">×</button>
+            <div style="flex:1; border-right:1px solid #eee; padding:16px; overflow:auto;">
+                <h2 style="text-align:center;">MKF MASTER</h2>
+                <div id="compareLeftContent"></div>
+            </div>
+            <div style="flex:1; padding:16px; overflow:auto;">
+                <h2 style="text-align:center;">ERROR DATA</h2>
+                <div id="compareRightContent"></div>
+            </div>
+        </div>
+    </div>
+    <!-- 페이지 어디든 추가 -->
+    <div id="resultModal"
+        style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:9999; align-items:center; justify-content:center;">
+        <div
+            style="background:#fff; border-radius:10px; padding:24px 32px; min-width:320px; max-width:90vw; box-shadow:0 4px 24px #0002; position:relative;">
+            <button onclick="document.getElementById('resultModal').style.display='none'"
+                style="position:absolute; right:16px; top:12px; background:none; border:none; font-size:20px; cursor:pointer;">×</button>
+            <div id="resultModalContent"></div>
+        </div>
+    </div>
     <div class="content">
         <div id="list-view" class="list-view">
             <table class="detailed-table">
@@ -117,6 +144,24 @@
             <!-- <button id="back-button">Back to List</button> -->
             <div id="detail-content"></div>
         </div>
+
+        <div id="compareModal"
+            style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:10000; align-items:center; justify-content:center;">
+            <div
+                style="background:#fff; border-radius:10px; padding:0; min-width:80vw; max-width:98vw; min-height:80vh; max-height:96vh; box-shadow:0 4px 24px #0002; position:relative; display:flex; flex-direction:row;">
+                <button onclick="document.getElementById('compareModal').style.display='none'"
+                    style="position:absolute; right:24px; top:18px; background:none; border:none; font-size:28px; cursor:pointer; z-index:10;">×</button>
+                <div
+                    style="flex:1; border-right:2px solid #eee; padding:32px 24px 24px 24px; overflow:auto; display:flex; flex-direction:column;">
+                    <h2 style="text-align:center; margin-bottom:24px; font-size:2rem;">MASTER DATA</h2>
+                    <div id="compareLeftContent" style="flex:1; min-height:60vh;"></div>
+                </div>
+                <div style="flex:1; padding:32px 24px 24px 24px; overflow:auto; display:flex; flex-direction:column;">
+                    <h2 style="text-align:center; margin-bottom:24px; font-size:2rem;">ERROR DATA</h2>
+                    <div id="compareRightContent" style="flex:1; min-height:60vh;"></div>
+                </div>
+            </div>
+        </div>
     </div>
     </div>
 
@@ -127,9 +172,9 @@
     <!-- Your main.js 파일 추가 -->
     <script src="js/main.js"></script>
     <script src="js/excelRegist.js"></script>
-    <script src="js/excelTelecom.js"></script>
-    <script src="js/depositCheck.js"></script>
-    <script src="js/pdfDepositCheck.js"></script>
+    <script src="js/excelDepositCheck.js"></script>
+    <script src="js/bankDepositCheck.js"></script>
+    <script src="js/CompareData.js"></script>
 </body>
 
 </html>
