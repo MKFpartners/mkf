@@ -326,7 +326,52 @@ app.put('/api/records/:id', async (req, res) => {
     res.status(500).json({ error: err.message || '서버 오류가 발생했습니다.' })
   }
 })
+// 예시: server.js 또는 app.js
+app.get('/api/error-data', async (req, res) => {
+  // 쿼리 파라미터 추출
+  const {
+    commit_date,
+    nationality,
+    error_code,
+    passport_number,
+    passport_name
+  } = req.query
+  // SQL 쿼리 작성 (필요에 따라 동적 where절 생성)
+  let sql = 'SELECT * FROM error_table WHERE 1=1'
+  const params = []
+  if (commit_date && commit_date.trim() !== '') {
+    sql += ' AND commit_date::date = $' + (params.length + 1)
+    params.push(commit_date)
+  }
+  if (nationality && nationality !== 'All') {
+    sql += ' AND nationality = $' + (params.length + 1)
+    params.push(nationality)
+  }
+  if (error_code) {
+    sql += ' AND error_code = $' + (params.length + 1)
+    params.push(error_code)
+  }
+  if (passport_number) {
+    sql += ' AND passport_number = $' + (params.length + 1)
+    params.push(passport_number)
+  }
+  if (passport_name) {
+    sql += ' AND passport_name = $' + (params.length + 1)
+    params.push(passport_name)
+  }
+  sql += ' ORDER BY commit_date DESC'
 
+  console.log('Generated SQL:', sql)
+  console.log('Query parameters:', params)
+
+  // DB에서 데이터 조회 (pg 예시)
+  try {
+    const result = await pool.query(sql, params)
+    res.json(result.rows)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+})
 // SQL 쿼리 실행 API
 app.post('/execute-query', async (req, res) => {
   const { queries } = req.body // 여러 쿼리를 배열로 받음

@@ -91,23 +91,7 @@
         <input type="file" id="bankDepositInput" accept=".xlsx, .xls, .csv" style="display: none;">
     </div>
     </div>
-    <!-- Compare 화면 모달 추가 -->
-    <div id="compareModal"
-        style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:10000; align-items:center; justify-content:center;">
-        <div
-            style="background:#fff; border-radius:10px; padding:24px 0; min-width:60vw; max-width:95vw; min-height:60vh; max-height:90vh; box-shadow:0 4px 24px #0002; position:relative; display:flex; flex-direction:row;">
-            <button onclick="document.getElementById('compareModal').style.display='none'"
-                style="position:absolute; right:16px; top:12px; background:none; border:none; font-size:20px; cursor:pointer; z-index:10;">×</button>
-            <div style="flex:1; border-right:1px solid #eee; padding:16px; overflow:auto;">
-                <h2 style="text-align:center;">MKF MASTER</h2>
-                <div id="compareLeftContent"></div>
-            </div>
-            <div style="flex:1; padding:16px; overflow:auto;">
-                <h2 style="text-align:center;">ERROR DATA</h2>
-                <div id="compareRightContent"></div>
-            </div>
-        </div>
-    </div>
+
     <!-- 페이지 어디든 추가 -->
     <div id="resultModal"
         style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:9999; align-items:center; justify-content:center;">
@@ -118,7 +102,7 @@
             <div id="resultModalContent"></div>
         </div>
     </div>
-    <div class="content">
+    <div class="content" id="main-content">
         <div id="list-view" class="list-view">
             <table class="detailed-table">
                 <thead>
@@ -144,25 +128,24 @@
             <!-- <button id="back-button">Back to List</button> -->
             <div id="detail-content"></div>
         </div>
+    </div>
+    </div>
 
-        <div id="compareModal"
-            style="display:none; position:fixed; left:0; top:0; width:100vw; height:100vh; background:rgba(0,0,0,0.3); z-index:10000; align-items:center; justify-content:center;">
+    <!-- Compare 전용 화면 (처음엔 숨김) -->
+    <div id="compare-content" style="display:none; width:100vw; min-height:100vh;">
+        <div style="display:flex; flex-direction:row; height:100vh;">
             <div
-                style="background:#fff; border-radius:10px; padding:0; min-width:80vw; max-width:98vw; min-height:80vh; max-height:96vh; box-shadow:0 4px 24px #0002; position:relative; display:flex; flex-direction:row;">
-                <button onclick="document.getElementById('compareModal').style.display='none'"
-                    style="position:absolute; right:24px; top:18px; background:none; border:none; font-size:28px; cursor:pointer; z-index:10;">×</button>
-                <div
-                    style="flex:1; border-right:2px solid #eee; padding:32px 24px 24px 24px; overflow:auto; display:flex; flex-direction:column;">
-                    <h2 style="text-align:center; margin-bottom:24px; font-size:2rem;">MASTER DATA</h2>
-                    <div id="compareLeftContent" style="flex:1; min-height:60vh;"></div>
-                </div>
-                <div style="flex:1; padding:32px 24px 24px 24px; overflow:auto; display:flex; flex-direction:column;">
-                    <h2 style="text-align:center; margin-bottom:24px; font-size:2rem;">ERROR DATA</h2>
-                    <div id="compareRightContent" style="flex:1; min-height:60vh;"></div>
-                </div>
+                style="flex:1; border-right:2px solid #eee; padding:32px 24px 24px 24px; overflow:auto; display:flex; flex-direction:column;">
+                <h2 style="text-align:center; margin-bottom:24px; font-size:2rem;">MKF MASTER</h2>
+                <div id="compareLeftContent" style="flex:1; min-height:60vh;"></div>
+            </div>
+            <div style="flex:1; padding:32px 24px 24px 24px; overflow:auto; display:flex; flex-direction:column;">
+                <h2 style="text-align:center; margin-bottom:24px; font-size:2rem;">ERROR DATA</h2>
+                <div id="compareRightContent" style="flex:1; min-height:60vh;"></div>
             </div>
         </div>
-    </div>
+        <button id="compareBackButton"
+            style="position:fixed; top:24px; right:32px; z-index:10001; font-size:1.2rem;">뒤로가기</button>
     </div>
 
     <!-- XLSX 라이브러리 추가 -->
@@ -174,7 +157,7 @@
     <script src="js/excelRegist.js"></script>
     <script src="js/excelDepositCheck.js"></script>
     <script src="js/bankDepositCheck.js"></script>
-    <script src="js/CompareData.js"></script>
+    <script src="js/compareData.js"></script>
 </body>
 
 </html>

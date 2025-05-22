@@ -40,8 +40,8 @@ document
           const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 })
 
           // 26번째 행(0-based 25)이 헤더, 27번째 행부터 데이터
-          const headerRow = rows[25]
-          const dataRows = rows.slice(26)
+          const headerRow = rows[0]
+          const dataRows = rows.slice(1)
 
           const filteredRows = []
           for (const rowArr of dataRows) {
@@ -62,17 +62,50 @@ document
 
           const updates = filteredRows.map(row => {
             const senderOrReceiver = row['Sender']
-            const depositAmount = row['Money In']
-            const transactionDate = row['Transaction Date']
+            const depositAmount = row['Amount']
+            // '20-May-25' → '2025-05-20'로 변환
+            let transactionDate = row['Transaction date']
+            if (transactionDate) {
+              if (typeof transactionDate === 'string') {
+                // 문자열: '14-May-25' → '2025-05-14'
+                const [day, mon, year] = transactionDate.split('-')
+                const monthMap = {
+                  Jan: '01',
+                  Feb: '02',
+                  Mar: '03',
+                  Apr: '04',
+                  May: '05',
+                  Jun: '06',
+                  Jul: '07',
+                  Aug: '08',
+                  Sep: '09',
+                  Oct: '10',
+                  Nov: '11',
+                  Dec: '12'
+                }
+                transactionDate = `20${year}-${monthMap[mon]}-${day.padStart(
+                  2,
+                  '0'
+                )}`
+              } else if (typeof transactionDate === 'number') {
+                // 숫자: 엑셀 날짜(1900-01-01 기준)
+                const excelEpoch = new Date(Date.UTC(1899, 11, 30))
+                excelEpoch.setUTCDate(excelEpoch.getUTCDate() + transactionDate)
+                const yyyy = excelEpoch.getUTCFullYear()
+                const mm = String(excelEpoch.getUTCMonth() + 1).padStart(2, '0')
+                const dd = String(excelEpoch.getUTCDate()).padStart(2, '0')
+                transactionDate = `${yyyy}-${mm}-${dd}`
+              }
+            }
             const branch = 'ABA Bank'
             return `
-            SELECT update_deposit_mkf (
-                '${senderOrReceiver}',
-                 ${depositAmount},
-                '${transactionDate}',
-                '${branch}'
-            );
-            `
+  SELECT update_deposit_mkf (
+      '${senderOrReceiver}',
+       ${depositAmount},
+      '${transactionDate}',
+      '${branch}'
+  );
+  `
           })
           console.log('Generated SQL Updates:', updates.join('\n'))
           await executeUpdates(updates)
