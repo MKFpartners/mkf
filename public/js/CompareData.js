@@ -1,29 +1,27 @@
 document.getElementById('compareButton').addEventListener('click', function () {
   document.getElementById('main-content').style.display = 'none'
   document.getElementById('compare-content').style.display = 'block'
-  // 데이터 로딩 로직 추가 가능
   document.getElementById('compareLeftContent').innerHTML = ''
   document.getElementById('compareRightContent').innerHTML = ''
 })
+
 document
   .getElementById('compareBackButton')
   .addEventListener('click', function () {
     document.getElementById('compare-content').style.display = 'none'
     document.getElementById('main-content').style.display = 'block'
   })
+
 document.getElementById('compareButton').addEventListener('click', function () {
-  // 전체 body의 내용을 clear
   document.body.innerHTML = ''
-  // 오늘 날짜 YY-MM-DD 포맷
   const today = new Date()
   const yyyy = today.getFullYear()
   const mm = String(today.getMonth() + 1).padStart(2, '0')
   const dd = String(today.getDate()).padStart(2, '0')
   const todayStr = `${yyyy}-${mm}-${dd}`
 
-  // 국적 옵션
   const nationalityOptions = `
-    <option value="All">All</option>
+      <option value="All">All</option>
     <option value="Cambodia">Cambodia</option>
     <option value="Nepal">Nepal</option>
     <option value="Vietnam">Vietnam</option>
@@ -41,8 +39,43 @@ document.getElementById('compareButton').addEventListener('click', function () {
     <option value="Laos">Laos</option>
     <option value="China">China</option>
   `
-
-  // Compare 화면을 동적으로 생성
+  const nationalityList = [
+    'Cambodia',
+    'Nepal',
+    'Vietnam',
+    'Philippine',
+    'Thailand',
+    'Mongolia',
+    'Indonesia',
+    'Sri Lanka',
+    'Uzbekistan',
+    'Pakistan',
+    'Myanmar',
+    'Kyrgyzstan',
+    'Bangladesh',
+    'Timor-Leste',
+    'Laos',
+    'China'
+  ]
+  const readonlyFields = ['id', 'commit_id', 'signature']
+  const visaTypeOptions = ['E9', 'E8']
+  const loanPrePriorityOptions = [
+    { value: 1, label: 'High Priority(우선희망)' },
+    { value: 2, label: 'Preferred(희망)' },
+    { value: 3, label: 'Not Interested(안함)' }
+  ]
+  const phoneTypeOptions = [
+    { value: 1, label: 'iPhone(아이폰)' },
+    { value: 2, label: 'galaxy(갤럭시)' },
+    { value: 3, label: 'etc(기타)' }
+  ]
+  const commitStatusOptions = [
+    { value: '진행중', label: '진행중' },
+    { value: '완료', label: '완료' },
+    { value: '오류', label: '오류' },
+    { value: '오류정정', label: '오류정정' },
+    { value: '보류', label: '보류' }
+  ]
   const compareDiv = document.createElement('div')
   compareDiv.id = 'compare-content'
   compareDiv.style.width = '100vw'
@@ -58,7 +91,7 @@ document.getElementById('compareButton').addEventListener('click', function () {
         <h2 style="text-align:center; margin-bottom:24px; font-size:2rem;">ERROR DATA</h2>
         <div style="margin-bottom:16px;">
           <div style="margin-bottom:8px;">
-            <input type="text" id="search_commit_date" placeholder="commit_date" style="width:110px; margin-right:8px;" value="${todayStr}">            
+            <input type="date" id="search_commit_date" placeholder="commit_date" style="width:140px; margin-right:8px;" value="${todayStr}">
             <select id="search_nationality" style="width:120px; margin-right:8px;">
               ${nationalityOptions}
             </select>
@@ -84,19 +117,16 @@ document.getElementById('compareButton').addEventListener('click', function () {
 
   document.body.appendChild(compareDiv)
 
-  // 뒤로가기 버튼 이벤트
   document
     .getElementById('compareBackButton')
     .addEventListener('click', function () {
-      window.location.reload() // 전체 페이지 새로고침(초기화면 복구)
+      window.location.reload()
     })
 
-  // Set default values for the search fields after they are appended to the DOM
   document.getElementById('search_commit_date').value = todayStr
   document.getElementById('search_nationality').value = 'Cambodia'
   document.getElementById('search_error_code').value = 'E'
 
-  // 검색 및 리스트 표시 함수
   async function loadErrorData (filters = {}) {
     let url = '/api/error-data'
     const params = []
@@ -110,7 +140,6 @@ document.getElementById('compareButton').addEventListener('click', function () {
 
     let data = []
     const container = document.getElementById('compareRightContent')
-    // 기존 검색 결과 먼저 clear
     container.innerHTML = ''
     try {
       const res = await fetch(url)
@@ -121,19 +150,16 @@ document.getElementById('compareButton').addEventListener('click', function () {
       data = []
     }
 
-    // 결과 개수 표시
     const resultCountElem = document.getElementById('errorResultCount')
     if (resultCountElem) {
       resultCountElem.querySelector('strong').textContent = data.length
     }
 
-    // 리스트 렌더링
     if (!data || data.length === 0) {
       container.innerHTML =
         '<div style="color:#888; text-align:center; margin-top:40px;">검색 결과가 없습니다.</div>'
       return
     }
-    // 페이징 처리
     const pageSize = 5
     let currentPage = 1
     const totalPages = Math.ceil(data.length / pageSize)
@@ -160,8 +186,8 @@ document.getElementById('compareButton').addEventListener('click', function () {
             <tbody>
               ${pageData
                 .map(
-                  row => `
-                <tr>
+                  (row, rowIdx) => `
+                <tr data-row-idx="${rowIdx}">
                   ${columns
                     .map(
                       col =>
@@ -186,8 +212,356 @@ document.getElementById('compareButton').addEventListener('click', function () {
             page === totalPages ? 'disabled' : ''
           } style="margin:0 4px;" id="errorNextBtn">&gt;</button>
         </div>
-    `
-      // 네비게이션 버튼 이벤트
+        <div id="errorRowDetail" style="margin-top:16px; color:#333; font-size:1rem; min-height:1.5em;"></div>
+      `
+
+      const tbody = container.querySelector('tbody')
+      const detailDiv = container.querySelector('#errorRowDetail')
+      if (tbody && detailDiv) {
+        tbody.querySelectorAll('tr').forEach(tr => {
+          tr.addEventListener('mouseenter', function () {
+            const idx = parseInt(tr.getAttribute('data-row-idx'))
+            const row = pageData[idx]
+            detailDiv.innerHTML = Object.entries(row)
+              .filter(([k, v]) => v !== null && v !== undefined)
+              .map(
+                ([k, v]) =>
+                  `<span style="margin-right:16px;"><b>${k}</b>=${v}</span>`
+              )
+              .join(' ')
+          })
+          tr.addEventListener('mouseleave', function () {
+            detailDiv.innerHTML = ''
+          })
+
+          tr.addEventListener('click', async function () {
+            const idx = parseInt(tr.getAttribute('data-row-idx'))
+            const row = pageData[idx]
+            const passportNumber = row['passport_number']
+            if (!passportNumber) {
+              document.getElementById('compareLeftContent').innerHTML =
+                '<div style="color:#888; margin-top:24px;">passport_number가 없습니다.</div>'
+              return
+            }
+            try {
+              const res = await fetch(
+                `/api/mkf-master-by-passport?passport_number=${encodeURIComponent(
+                  passportNumber
+                )}`
+              )
+              let masterData = null
+              if (res.ok) {
+                masterData = await res.json()
+              }
+              const fields = [
+                'id',
+                'nationality',
+                'passport_name',
+                'visa_type',
+                'passport_number',
+                'phone_type',
+                'sim_price',
+                'deposit_amount',
+                'balance',
+                'loan_pre_priority',
+                'entry_date',
+                'tel_number_cam',
+                'tel_number_kor',
+                'commit_date',
+                'format_name',
+                'commit_id',
+                'commit_status',
+                'signature',
+                'sender_name',
+                'sender_email',
+                'sent_date',
+                'participant_email',
+                'additional_information'
+              ]
+              let tableData = {}
+              if (!masterData || Object.keys(masterData).length === 0) {
+                fields.forEach(f => {
+                  if (
+                    [
+                      'sim_price',
+                      'deposit_amount',
+                      'balance',
+                      'loan_pre_priority'
+                    ].includes(f)
+                  ) {
+                    tableData[f] = row[f] ?? 0
+                    if (
+                      tableData[f] === null ||
+                      tableData[f] === undefined ||
+                      tableData[f] === ''
+                    )
+                      tableData[f] = 0
+                  } else if (f === 'format_name') {
+                    // format_name이 null 또는 undefined면 '오류 추가됨'으로
+                    let value =
+                      masterData && masterData[f] !== undefined
+                        ? masterData[f]
+                        : row[f]
+                    if (value === null || value === undefined || value === '') {
+                      tableData[f] = '오류 정정됨'
+                    } else {
+                      tableData[f] = value
+                    }
+                  } else {
+                    tableData[f] =
+                      masterData && masterData[f] !== undefined
+                        ? masterData[f]
+                        : row[f] ?? ''
+                    if (tableData[f] === null || tableData[f] === undefined)
+                      tableData[f] = ''
+                  }
+                })
+              } else {
+                fields.forEach(f => {
+                  if (
+                    [
+                      'sim_price',
+                      'deposit_amount',
+                      'balance',
+                      'loan_pre_priority'
+                    ].includes(f)
+                  ) {
+                    tableData[f] = masterData[f] ?? 0
+                    if (
+                      tableData[f] === null ||
+                      tableData[f] === undefined ||
+                      tableData[f] === ''
+                    )
+                      tableData[f] = 0
+                  } else {
+                    tableData[f] = masterData[f] ?? ''
+                    if (tableData[f] === null || tableData[f] === undefined)
+                      tableData[f] = ''
+                  }
+                })
+              }
+              const rows = fields
+                .map(k => {
+                  const v = tableData[k]
+                  if (readonlyFields.includes(k)) {
+                    return `<tr>
+                    <th style="text-align:right; padding:4px 8px; background:#f5f5f5;">${k}</th>
+                    <td style="padding:4px 8px;">
+                      <input type="text" name="${k}" value="${v}" readonly style="width:100%; background:#f5f5f5; border:none; color:#888;">
+                    </td>
+                  </tr>`
+                  } else if (k === 'nationality') {
+                    return `<tr>
+                    <th style="text-align:right; padding:4px 8px; background:#f5f5f5;">${k}</th>
+                    <td style="padding:4px 8px;">
+                      <select name="nationality" style="width:100%;">
+                        ${nationalityList
+                          .map(
+                            opt =>
+                              `<option value="${opt}"${
+                                v === opt ? ' selected' : ''
+                              }>${opt}</option>`
+                          )
+                          .join('')}
+                      </select>
+                    </td>
+                  </tr>`
+                  } else if (k === 'visa_type') {
+                    return `<tr>
+                    <th style="text-align:right; padding:4px 8px; background:#f5f5f5;">${k}</th>
+                    <td style="padding:4px 8px;">
+                      <select name="visa_type" style="width:100%;">
+                        ${visaTypeOptions
+                          .map(
+                            opt =>
+                              `<option value="${opt}"${
+                                v === opt ? ' selected' : ''
+                              }>${opt}</option>`
+                          )
+                          .join('')}
+                      </select>
+                    </td>
+                  </tr>`
+                  } else if (k === 'commit_status') {
+                    return `<tr>
+                    <th style="text-align:right; padding:4px 8px; background:#f5f5f5;">${k}</th>
+                    <td style="padding:4px 8px;">
+                      <select name="commit_status" style="width:100%;">
+                        ${commitStatusOptions
+                          .map(
+                            opt =>
+                              `<option value="${opt.value}"${
+                                v === opt.value ? ' selected' : ''
+                              }>${opt.label}</option>`
+                          )
+                          .join('')}
+                      </select>
+                    </td>
+                  </tr>`
+                  } else if (k === 'loan_pre_priority') {
+                    return `<tr>
+                    <th style="text-align:right; padding:4px 8px; background:#f5f5f5;">${k}</th>
+                    <td style="padding:4px 8px;">
+                      <select name="loan_pre_priority" style="width:100%;">
+                        ${loanPrePriorityOptions
+                          .map(
+                            opt =>
+                              `<option value="${opt.value}"${
+                                String(v) === String(opt.value)
+                                  ? ' selected'
+                                  : ''
+                              }>${opt.label}</option>`
+                          )
+                          .join('')}
+                      </select>
+                    </td>
+                  </tr>`
+                  } else if (k === 'phone_type') {
+                    return `<tr>
+                    <th style="text-align:right; padding:4px 8px; background:#f5f5f5;">${k}</th>
+                    <td style="padding:4px 8px;">
+                      <select name="phone_type" style="width:100%;">
+                        ${phoneTypeOptions
+                          .map(
+                            opt =>
+                              `<option value="${opt.value}"${
+                                String(v) === String(opt.value)
+                                  ? ' selected'
+                                  : ''
+                              }>${opt.label}</option>`
+                          )
+                          .join('')}
+                      </select>
+                    </td>
+                  </tr>`
+                  } else if (k === 'passport_number') {
+                    return `<tr>
+                    <th style="text-align:right; padding:4px 8px; background:#f5f5f5;">${k}</th>
+                    <td style="padding:4px 8px;">
+                      <input type="text" name="passport_number" maxlength="8" value="${
+                        v ?? ''
+                      }" style="width:100%;">
+                    </td>
+                  </tr>`
+                  } else if (
+                    ['sim_price', 'deposit_amount', 'balance'].includes(k)
+                  ) {
+                    return `<tr>
+                    <th style="text-align:right; padding:4px 8px; background:#f5f5f5;">${k}</th>
+                    <td style="padding:4px 8px;">
+                      <input type="number" name="${k}" value="${
+                      v ?? 0
+                    }" style="width:100%;">
+                    </td>
+                  </tr>`
+                  } else {
+                    return `<tr>
+                    <th style="text-align:right; padding:4px 8px; background:#f5f5f5;">${k}</th>
+                    <td style="padding:4px 8px;">
+                      <input type="text" name="${k}" value="${
+                      v ?? ''
+                    }" style="width:100%;">
+                    </td>
+                  </tr>`
+                  }
+                })
+                .join('')
+
+              document.getElementById('compareLeftContent').innerHTML = `
+                <div style="font-size:1.1rem; margin-bottom:8px;"><b>MKF MASTER</b></div>
+                <form id="mkfMasterEditForm">
+                  <table style="border-collapse:collapse; background:#fff; border:1px solid #eee; font-size:1rem; width:100%;">
+                    <tbody>
+                      ${rows}
+                    </tbody>
+                  </table>
+                  <div style="margin-top:16px; text-align:right;">
+                    <button type="submit" id="mkfMasterSaveBtn" style="margin-right:8px;">저장</button>
+                    <button type="button" id="mkfMasterCancelBtn">취소</button>
+                  </div>
+                </form>
+              `
+
+              document.getElementById('mkfMasterEditForm').onsubmit =
+                async function (e) {
+                  e.preventDefault()
+                  const password = prompt('저장하려면 암호를 입력하세요.')
+                  if (password !== '2233') {
+                    alert('암호가 올바르지 않습니다.')
+                    return
+                  }
+                  const formData = new FormData(e.target)
+                  const updateData = {}
+                  for (const [k, v] of formData.entries()) {
+                    if (!readonlyFields.includes(k)) updateData[k] = v
+                  }
+                  if (updateData.passport_number) {
+                    if (updateData.passport_number.length > 8) {
+                      alert('passport_number의 길이는 최대 8자리여야 합니다.')
+                      return
+                    }
+                    if (updateData.passport_number.length < 8) {
+                      alert('passport_number의 길이가 8자리보다 작습니다.')
+                      return
+                    }
+                  }
+                  const simPrice = Number(updateData.sim_price)
+                  const depositAmount = Number(updateData.deposit_amount)
+                  const balance = Number(updateData.balance)
+                  if (
+                    !isNaN(simPrice) &&
+                    !isNaN(depositAmount) &&
+                    !isNaN(balance)
+                  ) {
+                    if (simPrice !== depositAmount + balance) {
+                      alert(
+                        'sim_price는 deposit_amount + balance와 같아야 합니다.'
+                      )
+                      return
+                    }
+                  }
+                  // id가 없으면 insert, 있으면 update
+                  try {
+                    let res
+                    if (updateData.id && updateData.id !== '') {
+                      // update
+                      res = await fetch(`/api/records/${updateData.id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                      })
+                    } else {
+                      // insert (id 필드 제거)
+                      delete updateData.id
+                      res = await fetch('/api/records', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                      })
+                    }
+                    if (res.ok) {
+                      alert('저장되었습니다.')
+                    } else {
+                      alert('저장 실패')
+                    }
+                  } catch (err) {
+                    alert('저장 중 오류 발생')
+                  }
+                }
+
+              document.getElementById('mkfMasterCancelBtn').onclick =
+                function () {
+                  document.getElementById('compareLeftContent').innerHTML = ''
+                }
+              return
+            } catch (err) {
+              document.getElementById('compareLeftContent').innerHTML =
+                '<div style="color:#888; margin-top:24px;">MKF MASTER 조회 중 오류 발생</div>'
+            }
+          })
+        })
+      }
+
       if (document.getElementById('errorPrevBtn')) {
         document.getElementById('errorPrevBtn').onclick = () => {
           if (currentPage > 1) {
@@ -209,7 +583,6 @@ document.getElementById('compareButton').addEventListener('click', function () {
     renderTable(currentPage)
   }
 
-  // 검색 버튼 이벤트
   document
     .getElementById('errorSearchBtn')
     .addEventListener('click', function () {
@@ -224,7 +597,6 @@ document.getElementById('compareButton').addEventListener('click', function () {
       loadErrorData(filters)
     })
 
-  // 최초 전체 리스트 로딩 (오늘 날짜로 기본 검색)
   loadErrorData({
     commit_date: todayStr,
     nationality: 'Cambodia',

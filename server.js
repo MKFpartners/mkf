@@ -126,11 +126,11 @@ app.get('/api/records', async (req, res) => {
         addCondition('nationality', nationality)
       }
 
-      if (name && name !== '') {
+      /* if (name && name !== '') {
         conditions.push(`passport_name = $${paramCount}`)
         values.push(name)
         paramCount++
-      }
+      }*/
 
       if (commitDateFrom) {
         const dateStr = parseAndValidateDate(commitDateFrom)
@@ -193,7 +193,7 @@ app.get('/api/records', async (req, res) => {
     const result = await pool.query(query, values)
     console.log(`Found ${result.rows.length} records`) // 결과 로깅
     console.log('Generated query:', query)
-    console.log('Query parameters:', values)
+    console.log('Query parameters1:', values)
     res.json(result.rows)
   } catch (err) {
     console.error('Error in /api/records:', err)
@@ -201,13 +201,13 @@ app.get('/api/records', async (req, res) => {
   }
 })
 
-// 상세 정보 조회
+//상세 정보 조회
 app.get('/api/records/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const result = await pool.query('SELECT * FROM check_view WHERE id = $1', [
-      id
-    ])
+    const query = 'SELECT * FROM check_view WHERE id = $1'
+    console.log('상세조회 query:', query, 'params:', [id]) // 쿼리문과 파라미터 출력
+    const result = await pool.query(query, [id])
 
     if (result.rows.length === 0) {
       res.status(404).json({ error: '데이터를 찾을 수 없습니다.' })
@@ -219,6 +219,61 @@ app.get('/api/records/:id', async (req, res) => {
     res.json(record)
   } catch (err) {
     console.error('Error in /api/records/:id:', err)
+    res.status(500).json({ error: '서버 오류가 발생했습니다.' })
+  }
+})
+// mkf_master 테이블에서 passport_number로 조회하는 API
+// NEW: mkf_master 테이블에서 passport_number로만 조회하는 전용 API
+app.get('/api/mkf-master-by-passport', async (req, res) => {
+  try {
+    const { passport_number } = req.query // Use req.query for query parameters
+
+    if (!passport_number) {
+      return res
+        .status(400)
+        .json({ error: 'passport_number는 필수 파라미터입니다.' })
+    }
+
+    const query = `
+      SELECT * FROM check_view 
+      WHERE passport_number = $1      
+    `
+    console.log(
+      'Master 조회 (by passport_number only) query:',
+      query,
+      'params:',
+      [passport_number]
+    )
+    const result = await pool.query(query, [passport_number])
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: '데이터를 찾을 수 없습니다.' })
+      return
+    }
+
+    res.json(result.rows[0]) // assuming only one record is expected for a unique passport number
+  } catch (err) {
+    console.error('Error in /api/mkf-master-by-passport:', err)
+    res.status(500).json({ error: '서버 오류가 발생했습니다.' })
+  }
+})
+app.get('/api/records/:passport_number', async (req, res) => {
+  try {
+    const { passport_number } = req.params
+    const query = 'SELECT * FROM check_view WHERE passport_number = $1'
+    console.log('Master 조회 query:', query, 'params:', [passport_number]) // 쿼리문과 파라미터 출력
+    const result = await pool.query(query, [passport_number])
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: '데이터를 찾을 수 없습니다.' })
+      return
+    }
+
+    const record = result.rows[0]
+
+    res.json(record)
+  } catch (err) {
+    console.error('Error in /api/records/:passport_number:', err)
     res.status(500).json({ error: '서버 오류가 발생했습니다.' })
   }
 })
@@ -238,6 +293,8 @@ app.put('/api/records/:id', async (req, res) => {
       'deposit_date'
     ].forEach(key => {
       if (updateData[key]) {
+        // 밀리초(. 이후) 먼저 제거
+        updateData[key] = updateData[key].split('.')[0]
         // 숫자, -, :, space만 남기고 초 뒤의 잘못된 값을 제거
         updateData[key] = updateData[key]
           .replace(/[^0-9-: ]/g, '')
@@ -362,7 +419,7 @@ app.get('/api/error-data', async (req, res) => {
   sql += ' ORDER BY commit_date DESC'
 
   console.log('Generated SQL:', sql)
-  console.log('Query parameters:', params)
+  console.log('Query parameters2:', params)
 
   // DB에서 데이터 조회 (pg 예시)
   try {
@@ -373,6 +430,33 @@ app.get('/api/error-data', async (req, res) => {
   }
 })
 // SQL 쿼리 실행 API
+app.post('/api/records', async (req, res) => {
+  try {
+    const data = req.body
+
+    // null, undefined, ''가 아닌 값만 추출
+    const keys = Object.keys(data).filter(
+      k => data[k] !== null && data[k] !== undefined && data[k] !== ''
+    )
+    if (keys.length === 0) {
+      return res.status(400).json({ error: '입력 데이터가 없습니다.' })
+    }
+
+    const columns = keys.map(k => `"${k}"`).join(', ')
+    const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ')
+    const values = keys.map(k => data[k])
+
+    const sql = `INSERT INTO mkf_master (${columns}) VALUES (${placeholders}) RETURNING id`
+
+    // pool로 변경 (pg Pool 사용)
+    const { rows } = await pool.query(sql, values)
+
+    res.status(200).json({ success: true, insertId: rows[0]?.id })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'DB 저장 중 오류 발생' })
+  }
+})
 app.post('/execute-query', async (req, res) => {
   const { queries } = req.body // 여러 쿼리를 배열로 받음
   let errorCount = 0
