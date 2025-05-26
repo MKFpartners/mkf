@@ -75,7 +75,7 @@ document
       '${row['서명순서']}', '${row['발송자명']}', '${row['발송자 이메일']}', '${row['발송일']}', '${row['완료일']}',
       '${row['추가정보']}', '${row['참여자명']}', '${row['참여자 이메일']}', '${row['참여자 핸드폰']}',
       '${row['entry_date']}', ${loan_pre_priority},'${row['passport_name']}', '${row['passport_number']}', 
-      ${phoneType}, '${row['tel_number']}', '${visaType}', '${commit_date}'
+      ${phoneType}, '${row['tel_number']}', '${visaType}', '${commit_date}',1
   );
           `
           })

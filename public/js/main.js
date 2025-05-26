@@ -193,7 +193,8 @@ document.addEventListener('DOMContentLoaded', () => {
         sender_email: 'Sender Email (발송자 이메일)',
         sent_date: 'Sent Date (발송일)',
         participant_email: 'Participant Email (참여자 이메일)',
-        additional_information: 'Additional Information (추가정보)'
+        additional_information: 'Additional Information (추가정보)',
+        mkf_status: 'mkf_status (업무진도상태)'
       }
 
       const nationalityOptions = [
@@ -393,6 +394,38 @@ document.addEventListener('DOMContentLoaded', () => {
                                           </tr>
                                         `
                                       }
+                                      if (key === 'mkf_status') {
+                                        return `
+                                          <tr>
+                                            <td style="width: 30%; text-align: left; padding-right: 10px;">
+        <strong>${fieldMappings[key] || key}</strong>
+      </td>
+      <td style="width: 70%;">
+                                              <select name="mkf_status" style="width: 100%;"
+                                              ${isReadonly ? 'disabled' : ''}>
+                                                <option value="1" ${
+                                                  value == 1 ? 'selected' : ''
+                                                }>glosign excel 1 추가</option>
+                                                <option value="2" ${
+                                                  value == 2 ? 'selected' : ''
+                                                }>glosign excel 2 추가</option>
+                                              <option value="3" ${
+                                                value == 3 ? 'selected' : ''
+                                              }>미입금 0</option>
+                                              <option value="4" ${
+                                                value == 4 ? 'selected' : ''
+                                              }>미입금</option>
+                                              <option value="5" ${
+                                                value == 5 ? 'selected' : ''
+                                              }>입금완료</option>
+                                              <option value="6" ${
+                                                value == 6 ? 'selected' : ''
+                                              }>처리완료</option>
+                                              </select>
+                                            </td>
+                                          </tr>
+                                        `
+                                      }
                                       const isDateField = [
                                         'commit_date',
                                         'sent_date',
@@ -493,7 +526,11 @@ document.addEventListener('DOMContentLoaded', () => {
             formData.forEach((value, key) => {
               if (['commit_date', 'sent_date', 'entry_date'].includes(key)) {
                 updatedData[key] = cleanDateField(value)
-              } else if (key === 'loan_pre_priority' || key === 'phone_type') {
+              } else if (
+                key === 'loan_pre_priority' ||
+                key === 'phone_type' ||
+                key === 'mkf_status'
+              ) {
                 updatedData[key] = value === '' ? null : Number(value)
               } else {
                 updatedData[key] = value.trim() === '' ? null : value

@@ -356,6 +356,12 @@ app.put('/api/records/:id', async (req, res) => {
       updateData.tel_number_kor = null // 값이 없으면 null로 설정
     }
 
+    // mkf_status 기본값 설정
+    if (updateData.mkf_status === undefined || updateData.mkf_status === null) {
+      updateData.mkf_status = 0 // 기본값
+    } else {
+      updateData.mkf_status = Number(updateData.mkf_status) // 숫자로 변환
+    }
     // 업데이트할 필드와 값 생성
     const setClause = Object.keys(updateData)
       .map((key, index) => `${key} = $${index + 2}`)

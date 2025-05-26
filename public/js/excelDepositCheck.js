@@ -59,7 +59,8 @@ document
                 '${senderOrReceiver}',
                  ${depositAmount},
                 '${transactionDate}',
-                '${branch}'
+                '${branch}',
+                2
             );
             `
           })
