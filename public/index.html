@@ -11,7 +11,7 @@
 <body>
     <div class="container">
         <h1>MKF Data Management</h1>
-
+        window.tableGubun_sw = 'N'; // 기본값 N
         <div id="search-fields" class="filter-section">
             <!-- First Row: ID, Nationality, Visa Type, Status -->
             <div class="filter-row">
@@ -73,6 +73,16 @@
                 <span class="date-separator">~</span>
                 <input type="text" id="commitDateTo" placeholder="YYMMDD" maxlength="6" pattern="\d{6}"
                     style="width: 80px;">
+            </div>
+            <div style="display: inline-block; margin: 0 10px;">
+                <label>
+                    <input type="radio" name="jobGubun" id="jobGubunN" value="N" checked>
+                    N
+                </label>
+                <label>
+                    <input type="radio" name="jobGubun" id="jobGubunE" value="E">
+                    E
+                </label>
             </div>
             <button id="searchButton" class="primary-button">Search (조회)</button>
             <span class="record-count">Search Results: <strong id="totalRecords">0</strong></span>
@@ -166,7 +176,6 @@
     <!-- Your main.js 파일 추가 -->
     <script src="js/main.js"></script>
     <script src="js/excelRegist.js"></script>
-    <script src="js/excelDepositCheck.js"></script>
     <script src="js/bankDepositCheck.js"></script>
     <script src="js/compareData.js"></script>
 </body>

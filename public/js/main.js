@@ -93,6 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
+      const jobGubun = document.querySelector(
+        'input[name="jobGubun"]:checked'
+      ).value
+      params.append('jobGubun', jobGubun)
+
       console.log('params:', params.toString())
       const response = await fetch(`/api/records?${params.toString()}`)
       const data = await response.json()
@@ -103,7 +108,9 @@ document.addEventListener('DOMContentLoaded', () => {
         recordsList.innerHTML = data
           .map(
             record => `
-                      <tr onclick="showDetail(${record.id})">
+                      <tr onclick="showDetail(${
+                        record.id ? `'${record.id}'` : 'null'
+                      }, '${record.passport_number || ''}')">
                           <td>${record.id}</td>
                           <td>${record.nationality}</td>
                           <td>${record.passport_name}</td>
@@ -146,7 +153,14 @@ document.addEventListener('DOMContentLoaded', () => {
       totalRecordsElement.textContent = '0'
     }
   }
-
+  const jobGubunRadios = document.querySelectorAll('input[name="jobGubun"]')
+  jobGubunRadios.forEach(radio => {
+    radio.addEventListener('change', function () {
+      window.tableGubun_sw = this.value
+      // 필요시 콘솔 확인
+      // console.log('tableGubun_sw:', window.tableGubun_sw);
+    })
+  })
   // 날짜 필드 초기화 기능 추가
   if (clearDateButton) {
     clearDateButton.addEventListener('click', () => {
@@ -156,9 +170,29 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // 상세 정보 표시 함수
-  window.showDetail = async id => {
+  window.showDetail = async (id, passport_number) => {
+  const jobGubun = document.querySelector(
+    'input[name="jobGubun"]:checked'
+  ).value
+  let url
+
+  if (id && id !== 'null') {
+    // id가 있으면 항상 id로 조회
+    url = `/api/records/${id}?jobGubun=${jobGubun}`
+  } else if (passport_number) {
+    // error_table 조회 시 passport_number만 사용, 다른 param 무시
+    if (jobGubun === 'E') {
+      url = `/api/records/passport/${encodeURIComponent(passport_number)}?jobGubun=E`
+    } else {
+      url = `/api/records/passport/${encodeURIComponent(passport_number)}?jobGubun=${jobGubun}`
+    }
+  } else {
+    alert('ID와 여권번호가 모두 없습니다.')
+    return
+  }
+
     try {
-      const response = await fetch(`/api/records/${id}`)
+      const response = await fetch(url)
       if (!response.ok) throw new Error('데이터를 불러오는데 실패했습니다.')
 
       // 기존 화면 초기화
@@ -479,6 +513,22 @@ document.addEventListener('DOMContentLoaded', () => {
       const detailForm = document.getElementById('detailForm')
       //console.log('main.js: 디버깅 : detailForm:', detailForm)
 
+      // 라디오 버튼 변경 시 tableGubun_sw 값 갱신
+      document.addEventListener('DOMContentLoaded', () => {
+        const jobGubunRadios = document.querySelectorAll(
+          'input[name="jobGubun"]'
+        )
+        jobGubunRadios.forEach(radio => {
+          radio.addEventListener('change', function () {
+            window.tableGubun_sw = this.value
+            // 필요시 콘솔 확인
+            // console.log('tableGubun_sw:', window.tableGubun_sw);
+          })
+        })
+      })
+      // const jobGubun = document.querySelectorAll('input[name="jobGubun"]')
+      // fetch(`/api/records?jobGubun=${jobGubun}`)
+
       // "목록" 버튼 이벤트 리스너
       document
         .getElementById('backToListButton')
@@ -538,14 +588,19 @@ document.addEventListener('DOMContentLoaded', () => {
             })
 
             console.log('main.js: 수정 데이터1:', updatedData)
-
-            const response = await fetch(`/api/records/${currentRecord.id}`, {
-              method: 'PUT',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify(updatedData)
-            })
+            const jobGubun = document.querySelector(
+              'input[name="jobGubun"]:checked'
+            ).value
+            const response = await fetch(
+              `/api/records/${currentRecord.id}?jobGubun=${jobGubun}`,
+              {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedData)
+              }
+            )
 
             if (!response.ok) throw new Error('수정 실패')
 
@@ -592,6 +647,12 @@ document.addEventListener('DOMContentLoaded', () => {
       checkbox.checked = false
     })
 
+    // jobGubun 라디오 버튼을 N으로 초기화
+    const jobGubunN = document.getElementById('jobGubunN')
+    if (jobGubunN) {
+      jobGubunN.checked = true
+      window.tableGubun_sw = 'N'
+    }
     // 리스트 초기화
     if (recordsList) {
       recordsList.innerHTML = ''
@@ -657,7 +718,12 @@ document.addEventListener('DOMContentLoaded', () => {
       // 입금조회일 경우 합계를 가져옴
       try {
         console.log(`Fetching URL: /api/records?search_type=1`)
-        const response = await fetch(`/api/records?search_type=1`)
+        const jobGubun = document.querySelector(
+          'input[name="jobGubun"]:checked'
+        ).value
+        const response = await fetch(
+          `/api/records?search_type=1&jobGubun=${jobGubun}`
+        )
         console.log('Response received:', response)
 
         if (!response.ok) {
