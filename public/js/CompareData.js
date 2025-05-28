@@ -496,8 +496,8 @@ document.getElementById('compareButton').addEventListener('click', function () {
                     if (!readonlyFields.includes(k)) updateData[k] = v
                   }
                   if (updateData.passport_number) {
-                    if (updateData.passport_number.length > 8) {
-                      alert('passport_number의 길이는 최대 8자리여야 합니다.')
+                    if (updateData.passport_number.length > 9) {
+                      alert('passport_number의 길이는 최대 9자리여야 합니다.')
                       return
                     }
                     if (updateData.passport_number.length < 8) {

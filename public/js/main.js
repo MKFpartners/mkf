@@ -157,8 +157,6 @@ document.addEventListener('DOMContentLoaded', () => {
   jobGubunRadios.forEach(radio => {
     radio.addEventListener('change', function () {
       window.tableGubun_sw = this.value
-      // 필요시 콘솔 확인
-      // console.log('tableGubun_sw:', window.tableGubun_sw);
     })
   })
   // 날짜 필드 초기화 기능 추가
@@ -171,25 +169,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 상세 정보 표시 함수
   window.showDetail = async (id, passport_number) => {
-  const jobGubun = document.querySelector(
-    'input[name="jobGubun"]:checked'
-  ).value
-  let url
+    const jobGubun = document.querySelector(
+      'input[name="jobGubun"]:checked'
+    ).value
+    let url
 
-  if (id && id !== 'null') {
-    // id가 있으면 항상 id로 조회
-    url = `/api/records/${id}?jobGubun=${jobGubun}`
-  } else if (passport_number) {
-    // error_table 조회 시 passport_number만 사용, 다른 param 무시
-    if (jobGubun === 'E') {
-      url = `/api/records/passport/${encodeURIComponent(passport_number)}?jobGubun=E`
+    if (id && id !== 'null') {
+      // id가 있으면 항상 id로 조회
+      url = `/api/records/${id}?jobGubun=${jobGubun}`
+    } else if (passport_number) {
+      // error_table 조회 시 passport_number만 사용, 다른 param 무시
+      if (jobGubun === 'E') {
+        url = `/api/records/passport/${encodeURIComponent(
+          passport_number
+        )}?jobGubun=E`
+      } else {
+        url = `/api/records/passport/${encodeURIComponent(
+          passport_number
+        )}?jobGubun=${jobGubun}`
+      }
     } else {
-      url = `/api/records/passport/${encodeURIComponent(passport_number)}?jobGubun=${jobGubun}`
+      alert('ID와 여권번호가 모두 없습니다.')
+      return
     }
-  } else {
-    alert('ID와 여권번호가 모두 없습니다.')
-    return
-  }
 
     try {
       const response = await fetch(url)
@@ -308,7 +310,11 @@ document.addEventListener('DOMContentLoaded', () => {
       detailContent.innerHTML = `
                   <div class="detail-header" style="display: flex; justify-content: space-between; align-items: center;">
    <button id="backToListButton" class="secondary-button">Return</button>                    
-                  <h2 style="text-align: center; flex-grow: 1;">Detailed Informations</h2>
+                  <h2 style="text-align: center; flex-grow: 1;">${
+                    jobGubun === 'E'
+                      ? 'ErrorData Detailed Informations'
+                      : 'Detailed Informations'
+                  }</h2>
                   </div>
                   <div class="detail-body">
                       <form id="detailForm">
@@ -521,8 +527,6 @@ document.addEventListener('DOMContentLoaded', () => {
         jobGubunRadios.forEach(radio => {
           radio.addEventListener('change', function () {
             window.tableGubun_sw = this.value
-            // 필요시 콘솔 확인
-            // console.log('tableGubun_sw:', window.tableGubun_sw);
           })
         })
       })

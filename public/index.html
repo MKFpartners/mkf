@@ -11,7 +11,6 @@
 <body>
     <div class="container">
         <h1>MKF Data Management</h1>
-        window.tableGubun_sw = 'N'; // 기본값 N
         <div id="search-fields" class="filter-section">
             <!-- First Row: ID, Nationality, Visa Type, Status -->
             <div class="filter-row">
@@ -85,19 +84,17 @@
                 </label>
             </div>
             <button id="searchButton" class="primary-button">Search (조회)</button>
-            <span class="record-count">Search Results: <strong id="totalRecords">0</strong></span>
-
             <div style="display: flex; align-items: center; gap: 10px; margin-left: 10px;">
                 <label class="deposit-check-label" for="depositCheck">입금조회</label>
                 <input type="checkbox" id="depositCheck" />
-                <span class="deposit-sum">
-                    입금액: <strong id="deposit-sum">0</strong>
-                </span>
                 <label class="nodeposit-check-label" for="noepositCheck">미입금조회</label>
                 <input type="checkbox" id="nodepositCheck" />
                 <label class="loan-preference-label" for="loanPreferenceCheck">대출요청</label>
                 <input type="checkbox" id="loanPreferenceCheck" />
+                <span class="deposit-sum">입금합계: <strong id="deposit-sum">0</strong></span>
+                <span class="record-count">Search Results: <strong id="totalRecords">0</strong></span>
             </div>
+
         </div>
         <div class="button-row" style="display: flex; justify-content: flex-start; gap: 10px; margin-top: 5px;">
             <button id="excelInputButton" class="secondary-button">gSign Regist</button>
