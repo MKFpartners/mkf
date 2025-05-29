@@ -102,6 +102,7 @@
             <button id="bankDepositButton" class="secondary-button">ABA Bank Deposit</button>
             <button id="resetButton" class="secondary-button">Reset</button>
             <button id="compareButton" class="secondary-button">Compare</button>
+            <button id="downloadExcelButton" class="primary-button" style="margin-left:8px;">Download</button>
         </div>
         <!-- Hidden File Input -->
         <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;">
@@ -170,11 +171,13 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.14.305/pdf.worker.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- Your main.js 파일 추가 -->
     <script src="js/main.js"></script>
     <script src="js/excelRegist.js"></script>
     <script src="js/bankDepositCheck.js"></script>
     <script src="js/compareData.js"></script>
+    <script src="js/excelDownload.js"></script>
 </body>
 
 </html>

@@ -123,20 +123,3 @@ function showResultModal (result) {
       (result.error_count > 0 ? `에러 건수: ${result.error_count}` : '')
   )
 }
-/*await executeQueries(queries);
- /*   console.log('서버 응답 상태:', response.status) // 응답 상태 코드 확인
-
-    if (!response.ok) {
-      console.error('서버 응답 오류:', response.status, response.statusText)
-      alert(`서버 오류: ${response.statusText}`)
-      return
-    }
-
-    const message = await response.text()
-    console.log('서버 응답 메시지:', message) // 응답 메시지 확인
-    alert(message)
-  } catch (error) {
-    console.error('Error executing queries:', error)
-    alert('서버와의 통신 중 오류가 발생했습니다.')
-  }
-} */

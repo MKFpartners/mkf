@@ -173,7 +173,22 @@ document.addEventListener('DOMContentLoaded', () => {
       'input[name="jobGubun"]:checked'
     ).value
     let url
-
+    // 상세조회 폼에서 passport_number, passport_name 필드의 색상을 blue로 지정
+    const detailForm = document.getElementById('detailForm')
+    if (detailForm) {
+      const passportNumberInput = detailForm.querySelector(
+        '[name="passport_number"]'
+      )
+      if (passportNumberInput) {
+        passportNumberInput.style.color = 'blue'
+      }
+      const passportNameInput = detailForm.querySelector(
+        '[name="passport_name"]'
+      )
+      if (passportNameInput) {
+        passportNameInput.style.color = 'blue'
+      }
+    }
     if (id && id !== 'null') {
       // id가 있으면 항상 id로 조회
       url = `/api/records/${id}?jobGubun=${jobGubun}`
@@ -515,6 +530,16 @@ document.addEventListener('DOMContentLoaded', () => {
                   </div>
               `
 
+      if (jobGubun === 'E') {
+        const detailForm = document.getElementById('detailForm')
+        if (detailForm) {
+          const inputs = detailForm.querySelectorAll('input, select, textarea')
+          inputs.forEach(el => {
+            el.setAttribute('readonly', true)
+            el.setAttribute('disabled', true)
+          })
+        }
+      }
       // 디버깅: detailForm 확인
       const detailForm = document.getElementById('detailForm')
       //console.log('main.js: 디버깅 : detailForm:', detailForm)
@@ -570,12 +595,6 @@ document.addEventListener('DOMContentLoaded', () => {
               return
             }
             const formData = new FormData(document.getElementById('detailForm'))
-            //console.log('main.js: formData:', formData)
-            // console.log(
-            //   'main.js: 디버깅 : formData:',
-            //   Array.from(formData.entries())
-            // ) // 디버깅용 출력
-
             const updatedData = {}
             formData.forEach((value, key) => {
               if (['commit_date', 'sent_date', 'entry_date'].includes(key)) {
@@ -595,23 +614,38 @@ document.addEventListener('DOMContentLoaded', () => {
             const jobGubun = document.querySelector(
               'input[name="jobGubun"]:checked'
             ).value
-            const response = await fetch(
-              `/api/records/${currentRecord.id}?jobGubun=${jobGubun}`,
-              {
-                method: 'PUT',
+
+            // id가 없거나 'null'이면 POST(신규), 있으면 PUT(수정)
+            let response
+            if (!currentRecord.id || currentRecord.id === 'null') {
+              // 신규 등록(POST)
+              response = await fetch(`/api/records?jobGubun=${jobGubun}`, {
+                method: 'POST',
                 headers: {
                   'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(updatedData)
-              }
-            )
+              })
+            } else {
+              // 기존 데이터 수정(PUT)
+              response = await fetch(
+                `/api/records/${currentRecord.id}?jobGubun=${jobGubun}`,
+                {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify(updatedData)
+                }
+              )
+            }
 
-            if (!response.ok) throw new Error('수정 실패')
+            if (!response.ok) throw new Error('저장 실패')
 
-            alert('수정이 완료되었습니다.')
+            alert('저장이 완료되었습니다.')
           } catch (error) {
-            console.error('수정 중 오류:', error)
-            alert('수정에 실패했습니다.')
+            console.error('저장 중 오류:', error)
+            alert('저장에 실패했습니다.')
           }
         })
       }

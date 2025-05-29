@@ -49,32 +49,3 @@ async function saveChanges () {
   console.log('script.js: 저장 로직이 비어있다')
   // ... existing save logic ...
 }
-/*
-function showResultModal(data) {
-  let html = `
-    <h3 style="color:${data.result === 'success' ? '#2e7d32' : '#d32f2f'}; margin-bottom:12px;">
-      ${data.result === 'success' ? '✅ 성공적으로 처리되었습니다!' : '⚠️ 일부 오류가 발생했습니다'}
-    </h3>
-    <div style="margin-bottom:8px;">
-      <strong>mkf_master 입력 건수:</strong> ${data.mkf_master_count}건<br>
-      <strong>error_table 입력 건수:</strong> ${data.error_table_count}건<br>
-      <strong>에러 건수:</strong> ${data.error_count}건
-    </div>
-    ${
-      data.errors && data.errors.length
-        ? `<details style="margin-top:8px;"><summary>오류 상세 보기</summary>
-            <ul style="color:#d32f2f; margin:8px 0 0 16px;">
-              ${data.errors
-                .map(
-                  err =>
-                    `<li><strong>${err.error_code}</strong>: ${err.message}</li>`
-                )
-                .join('')}
-            </ul>
-          </details>`
-        : ''
-    }
-  `;
-  document.getElementById('resultModalContent').innerHTML = html;
-  document.getElementById('resultModal').style.display = 'flex';
-} */

@@ -398,6 +398,23 @@ app.put('/api/records/:id', async (req, res) => {
     res.status(500).json({ error: err.message || '서버 오류가 발생했습니다.' })
   }
 })
+
+// server.js
+app.post('/api/download/all', async (req, res) => {
+  const jobGubun = req.body.jobGubun || 'M'
+  const keys = req.body.keys || []
+  if (!Array.isArray(keys) || keys.length === 0) return res.json([])
+  let sql, result
+  if (jobGubun === 'E') {
+    sql = `SELECT * FROM error_table WHERE passport_number = ANY($1)`;
+    result = await pool.query(sql, [keys])
+  } else {
+    sql = `SELECT * FROM mkf_master WHERE id = ANY($1::int[])`;
+    result = await pool.query(sql, [keys.map(Number)])
+  }
+  res.json(result.rows)
+})
+
 // 예시: server.js 또는 app.js
 app.get('/api/error-data', async (req, res) => {
   // 쿼리 파라미터 추출
