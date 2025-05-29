@@ -39,7 +39,6 @@ document
           const sheet = workbook.Sheets[sheetName]
           const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 })
 
-          // 26번째 행(0-based 25)이 헤더, 27번째 행부터 데이터
           const headerRow = rows[0]
           const dataRows = rows.slice(1)
 
@@ -103,7 +102,8 @@ document
       '${senderOrReceiver}',
        ${depositAmount},
       '${transactionDate}',
-      '${branch}'
+      '${branch}',
+      4 -- 4는 '입금'을 의미
   );
   `
           })

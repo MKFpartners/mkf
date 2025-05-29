@@ -126,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
                               : '-'
                           }</td>
                           <td>${record.sim_price}</td>
+                          <td>${record.deposit_amount}</td>
                           <td>${record.balance}</td>                          
                           <td>${
                             record.loan_pre_priority == 1
@@ -276,7 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'commit_status',
         'signature',
         'sim_price',
-        'deposit_amount',
+        //'deposit_amount',
         'sender_name',
         'sender_email',
         'sent_date',
@@ -633,7 +634,15 @@ document.addEventListener('DOMContentLoaded', () => {
             const jobGubun = document.querySelector(
               'input[name="jobGubun"]:checked'
             ).value
-
+            const simPrice = Number(updatedData.sim_price)
+            const depositAmount = Number(updatedData.deposit_amount)
+            const balance = Number(updatedData.balance)
+            if (!isNaN(simPrice) && !isNaN(depositAmount) && !isNaN(balance)) {
+              if (simPrice !== depositAmount + balance) {
+                alert('sim_price는 deposit_amount + balance와 같아야 합니다.')
+                return
+              }
+            }
             // id가 없거나 'null'이면 POST(신규), 있으면 PUT(수정)
             let response
             if (!currentRecord.id || currentRecord.id === 'null') {
