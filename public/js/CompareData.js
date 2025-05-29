@@ -438,7 +438,7 @@ document.getElementById('compareButton').addEventListener('click', function () {
                     return `<tr>
                     <th style="text-align:right; padding:4px 8px; background:#f5f5f5;">${k}</th>
                     <td style="padding:4px 8px;">
-                      <input type="text" name="passport_number" maxlength="8" value="${
+                      <input type="text" name="passport_number" maxlength="9" value="${
                         v ?? ''
                       }" style="width:100%;">
                     </td>

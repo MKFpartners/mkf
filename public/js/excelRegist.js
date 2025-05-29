@@ -40,16 +40,16 @@ document
 
           const queries = rows.map(row => {
             const phoneType =
-              row['phone_type-iphone'] === 'true'
+              row['phone_type-phone_type-iphone'] === 'true'
                 ? 1
-                : row['phone_type-galaxy'] === 'true'
+                : row['phone_type-phone_type-galaxy'] === 'true'
                 ? 2
-                : row['phone_type-etc'] === 'true'
+                : row['phone_type-phone_type-etc'] === 'true'
                 ? 3
                 : 0
             const loan_pre_priority =
-              'loan_pre_priority-Yes' in row
-                ? row['loan_pre_priority-Yes'] === 'true'
+              'loan_pre_priority-loan_pre_priority-Yes' in row
+                ? row['loan_pre_priority-loan_pre_priority-Yes'] === 'true'
                   ? 1
                   : 2
                 : 3

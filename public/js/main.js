@@ -403,6 +403,25 @@ document.addEventListener('DOMContentLoaded', () => {
                                           </tr>
                                         `
                                       }
+                                      if (key === 'passport_number') {
+                                        return `
+    <tr>
+      <td style="width: 30%; text-align: left; padding-right: 10px;">
+        <strong>${fieldMappings[key] || key}</strong>
+      </td>
+      <td style="width: 70%;">
+        <input 
+          type="text" 
+          name="passport_number" 
+          value="${value !== null && value !== undefined ? value : ''}" 
+          maxlength="9"
+          style="width: 100%;" 
+          ${isReadonly ? 'disabled' : ''}
+        />
+      </td>
+    </tr>
+  `
+                                      }
                                       if (key === 'loan_pre_priority') {
                                         return `
                                           <tr>
