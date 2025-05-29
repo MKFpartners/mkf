@@ -258,7 +258,7 @@ app.get('/api/records', async (req, res) => {
           NULL AS loan_pre_priority,
           NULL AS entry_date,
           NULL AS tel_number_kor,
-          SUM(sim_price - balance) AS deposit_sum
+          SUM(deposit_amount) AS deposit_sum
         FROM ${table}
         ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
         ORDER BY id DESC
@@ -406,10 +406,10 @@ app.post('/api/download/all', async (req, res) => {
   if (!Array.isArray(keys) || keys.length === 0) return res.json([])
   let sql, result
   if (jobGubun === 'E') {
-    sql = `SELECT * FROM error_table WHERE passport_number = ANY($1)`;
+    sql = `SELECT * FROM error_table WHERE passport_number = ANY($1)`
     result = await pool.query(sql, [keys])
   } else {
-    sql = `SELECT * FROM mkf_master WHERE id = ANY($1::int[])`;
+    sql = `SELECT * FROM mkf_master WHERE id = ANY($1::int[])`
     result = await pool.query(sql, [keys.map(Number)])
   }
   res.json(result.rows)
