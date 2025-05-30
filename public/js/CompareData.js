@@ -509,6 +509,16 @@ document.getElementById('compareButton').addEventListener('click', function () {
                     alert('passport_name을 입력하세요.')
                     return
                   }
+                  if (
+                    updateData.sim_price == null ||
+                    Number(updateData.sim_price) == 0 ||
+                    updateData.sim_price == undefined ||
+                    updateData.sim_price.trim() === ''
+                  ) {
+                    alert('sim_price  값을 입력하세요.')
+                    return
+                  }
+
                   const simPrice = Number(updateData.sim_price)
                   const depositAmount = Number(updateData.deposit_amount)
                   const balance = Number(updateData.balance)
@@ -524,24 +534,37 @@ document.getElementById('compareButton').addEventListener('click', function () {
                       return
                     }
                   }
-                  // id가 없으면 insert, 있으면 update
+                  // passport_number 없으면 insert, 있으면 update
                   try {
                     let res
-                    if (updateData.id && updateData.id !== '') {
-                      // update
-                      res = await fetch(`/api/records/${updateData.id}`, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(updateData)
-                      })
-                    } else {
-                      // insert (id 필드 제거)
-                      delete updateData.id
-                      res = await fetch('/api/records', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(updateData)
-                      })
+                    if (
+                      updateData.passport_number &&
+                      updateData.passport_number !== ''
+                    ) {
+                      // 저장 버튼 클릭 시
+                      const checkRes = await fetch(
+                        `/api/records/passport/${updateData.passport_number}`
+                      )
+                      if (checkRes.ok) {
+                        console.log('Already Record exist, update record')
+
+                        res = await fetch(
+                          `/api/records/${updateData.passport_number}`,
+                          {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(updateData)
+                          }
+                        )
+                      } else {
+                        console.log('Record not found, inserting new record')
+                        delete updateData.id
+                        res = await fetch('/api/records', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(updateData)
+                        })
+                      }
                     }
                     if (res.ok) {
                       alert('저장되었습니다.')

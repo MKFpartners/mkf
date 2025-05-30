@@ -275,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'commit_id',
         'format_name',
         'commit_status',
+        'passport_number',
         'signature',
         'sim_price',
         //'deposit_amount',

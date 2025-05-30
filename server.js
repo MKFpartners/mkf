@@ -61,7 +61,7 @@ app.get('/api/records/:id', async (req, res) => {
   try {
     const { id } = req.params
     const query = `SELECT * FROM ${table} WHERE id = $1`
-    console.log('상세조회 query:', query, 'params:', [id]) // 쿼리문과 파라미터 출력
+    console.log('id 상세조회 query:', query, 'params:', [id]) // 쿼리문과 파라미터 출력
     const result = await pool.query(query, [id])
 
     if (result.rows.length === 0) {
@@ -286,6 +286,41 @@ app.get('/api/records', async (req, res) => {
 })
 
 // 레코드 수정 API
+app.put('/api/records/:passport_number', async (req, res) => {
+  const { jobGubun } = req.query
+  const table = jobGubun === 'E' ? 'error_table' : 'mkf_master'
+  try {
+    const { passport_number } = req.params
+    const updateData = req.body
+
+    // id 필드 제거 (passport_number로만 업데이트)
+    delete updateData.id
+
+    // 업데이트할 필드와 값 생성
+    const setClause = Object.keys(updateData)
+      .map((key, index) => `${key} = $${index + 1}`)
+      .join(', ')
+    const values = Object.values(updateData)
+
+    const query = `
+      UPDATE ${table}
+      SET ${setClause}
+      WHERE passport_number = $${values.length + 1}
+      RETURNING *
+    `
+    const result = await pool.query(query, [...values, passport_number])
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: '데이터를 찾을 수 없습니다.' })
+      return
+    }
+
+    res.json(result.rows[0])
+  } catch (err) {
+    console.error('Error in updating record by passport_number:', err)
+    res.status(500).json({ error: err.message || '서버 오류가 발생했습니다.' })
+  }
+})
 app.put('/api/records/:id', async (req, res) => {
   const { jobGubun } = req.query
   const table = jobGubun === 'E' ? 'error_table' : 'mkf_master'
@@ -383,8 +418,9 @@ app.put('/api/records/:id', async (req, res) => {
       WHERE id = $1
       RETURNING *
     `
-    const result = await pool.query(query, [id, ...values])
     console.log('query = ', query)
+    const result = await pool.query(query, [id, ...values])
+
     //console.log('result = ', result)
     if (result.rows.length === 0) {
       res.status(404).json({ error: '데이터를 찾을 수 없습니다.' })
@@ -482,7 +518,7 @@ app.post('/api/records', async (req, res) => {
     const values = keys.map(k => data[k])
 
     const sql = `INSERT INTO ${table} (${columns}) VALUES (${placeholders}) RETURNING id`
-
+    console.log('Generated SQL:', sql)
     // pool로 변경 (pg Pool 사용)
     const { rows } = await pool.query(sql, values)
 

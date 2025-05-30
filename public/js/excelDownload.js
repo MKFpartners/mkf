@@ -22,7 +22,15 @@ downloadExcelButton.addEventListener('click', async () => {
 
     // 1. 리스트에서 id 또는 passport_number만 추출
     const tbody = document.querySelector('#records-list')
+    if (!tbody) {
+    alert('자료가 없습니다')
+    return
+  }
     const trs = tbody.querySelectorAll('tr')
+    if (!trs.length) {
+    alert('자료가 없습니다')
+    return
+  }
     let keyList = []
     if (jobGubun === 'E') {
       // error_table: passport_number가 첫 번째 td에 있다고 가정
