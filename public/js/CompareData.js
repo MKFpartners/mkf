@@ -500,10 +500,14 @@ document.getElementById('compareButton').addEventListener('click', function () {
                       alert('passport_number의 길이는 최대 9자리여야 합니다.')
                       return
                     }
-                    if (updateData.passport_number.length < 8) {
-                      alert('passport_number의 길이가 8자리보다 작습니다.')
-                      return
-                    }
+                  }
+                  if (
+                    updateData.passport_name == null ||
+                    updateData.passport_name == undefined ||
+                    updateData.passport_name.trim() === ''
+                  ) {
+                    alert('passport_name을 입력하세요.')
+                    return
                   }
                   const simPrice = Number(updateData.sim_price)
                   const depositAmount = Number(updateData.deposit_amount)
