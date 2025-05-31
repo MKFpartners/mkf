@@ -46,15 +46,81 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadRecords (search_type) {
     try {
       const params = new URLSearchParams()
-      // ID 필드 값 가져오기
       const idFilter = document.getElementById('idFilter') // ID 입력 필드
       const idValue = idFilter ? idFilter.value.trim() : ''
+      const passportFilter = document.getElementById('passportFilter') // 여권번호 입력 필드
+      const passportValue = passportFilter ? passportFilter.value.trim() : ''
+
       console.log('loadRecords 시작')
       console.log('search_type = ', search_type)
+      let response = ''
 
-      if (idValue) {
-        // ID 값이 있으면 ID로만 조회
-        params.append('id', Number(idValue))
+      if (idValue || passportValue) {
+        const jobGubun = document.querySelector(
+          'input[name="jobGubun"]:checked'
+        ).value
+        params.append('jobGubun', jobGubun)
+
+        if (idValue && /^\d+$/.test(idValue)) {
+          params.append('id', Number(idValue))
+          console.log('id= ', idValue)
+          response = await fetch(`/api/records/${idValue}?jobGubun=${jobGubun}`)
+        } else {
+          params.append('passport_number', passportValue)
+          console.log('passport_number= ', passportValue)
+          response = await fetch(
+            `/api/records/passport/${passportValue}?jobGubun=${jobGubun}`
+          )
+        }
+        const data = await response.json()
+        // data가 객체 1개이므로 배열로 변환
+        const dataArr = data ? [data] : []
+        // 이하 기존 코드에서 data를 dataArr로 사용
+        if (dataArr.length > 0) {
+          recordsList.innerHTML = dataArr
+            .map(
+              record => `
+          <tr onclick="showDetail(${record.id ? `'${record.id}'` : 'null'}, '${
+                record.passport_number || ''
+              }')">
+            <td>${record.id}</td>
+            <td>${record.nationality}</td>
+            <td>${record.passport_name}</td>
+            <td>${record.visa_type}</td>
+            <td>${record.passport_number}</td>
+            <td>${
+              Number(record.phone_type) == 1
+                ? 'iPhone'
+                : Number(record.phone_type) == 2
+                ? 'galaxy'
+                : Number(record.phone_type) == 3
+                ? 'etc'
+                : '-'
+            }</td>
+            <td>${record.sim_price}</td>
+            <td>${record.deposit_amount}</td>
+            <td>${record.balance}</td>                          
+            <td>${
+              record.loan_pre_priority == 1
+                ? '우선희망'
+                : record.loan_pre_priority == 2
+                ? '희망'
+                : record.loan_pre_priority == 3
+                ? '안함'
+                : '-'
+            }</td>
+            <td>${record.entry_date}</td>
+            <td>${record.tel_number_kor}</td>
+          </tr>
+        `
+            )
+            .join('')
+        } else {
+          recordsList.innerHTML =
+            '<tr><td colspan="7">데이터가 없습니다.</td></tr>'
+        }
+        totalRecordsElement.textContent = dataArr.length
+        return // 여기서 함수 종료
       } else {
         //2: 대출희망, 4: 미입금조회
         if (search_type === 2 || search_type === 4) {
@@ -74,9 +140,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (nameFilter && nameFilter.value !== '') {
           params.append('passport_name', nameFilter.value)
         }
-        if (passportFilter && passportFilter.value !== '') {
-          params.append('passport_number', passportFilter.value)
-        }
+        // if (passportFilter && passportFilter.value !== '') {
+        //   params.append('passport_number', passportFilter.value)
+        // }
         if (commitDateFromInput.value.trim()) {
           params.append('commitDateFrom', commitDateFromInput.value.trim())
         }
@@ -93,13 +159,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      const jobGubun = document.querySelector(
-        'input[name="jobGubun"]:checked'
-      ).value
+      jobGubun = document.querySelector('input[name="jobGubun"]:checked').value
       params.append('jobGubun', jobGubun)
 
       console.log('params:', params.toString())
-      const response = await fetch(`/api/records?${params.toString()}`)
+      response = await fetch(`/api/records?${params.toString()}`)
       const data = await response.json()
 
       console.log('API 응답 데이터:', data)

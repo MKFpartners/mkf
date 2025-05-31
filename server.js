@@ -56,6 +56,10 @@ app.get('/health', (req, res) => {
 
 //상세 정보 조회
 app.get('/api/records/:id', async (req, res) => {
+  console.log(
+    'Received request for app.get(/api/records/:id with query:',
+    req.query
+  )
   const { jobGubun } = req.query
   const table = jobGubun === 'E' ? 'error_table' : 'check_view'
   try {
@@ -80,6 +84,10 @@ app.get('/api/records/:id', async (req, res) => {
 // mkf_master 테이블에서 passport_number로 조회하는 API
 // NEW: mkf_master 테이블에서 passport_number로만 조회하는 전용 API
 app.get('/api/mkf-master-by-passport', async (req, res) => {
+  console.log(
+    'Received request for app.get(/api/records/:mkf-master-by-passport:',
+    req.query
+  )
   const { jobGubun } = req.query
   const table = jobGubun === 'E' ? 'error_table' : 'check_view'
   try {
@@ -115,12 +123,18 @@ app.get('/api/mkf-master-by-passport', async (req, res) => {
   }
 })
 app.get('/api/records/passport/:passport_number', async (req, res) => {
+  console.log(
+    'Received request for app.get(/api/records/passport/:passport_number with query:',
+    req.query
+  )
   const { jobGubun } = req.query
   const table = jobGubun === 'E' ? 'error_table' : 'check_view'
   try {
     const { passport_number } = req.params
     const query = `SELECT * FROM ${table} WHERE passport_number = $1`
-    console.log('조회 query:', query, 'params:', [passport_number]) // 쿼리문과 파라미터 출력
+    console.log('passport_number 조회 query:', query, 'params:', [
+      passport_number
+    ]) // 쿼리문과 파라미터 출력
     const result = await pool.query(query, [passport_number])
 
     if (result.rows.length === 0) {
@@ -138,6 +152,10 @@ app.get('/api/records/passport/:passport_number', async (req, res) => {
 })
 // 전체 목록 또는 필터링된 목록 조회
 app.get('/api/records', async (req, res) => {
+  console.log(
+    'Received request for app.get(/api/records with query:',
+    req.query
+  )
   const { jobGubun } = req.query
   const table = jobGubun === 'E' ? 'error_table' : 'mkf_master'
   try {
@@ -159,7 +177,7 @@ app.get('/api/records', async (req, res) => {
     let paramCount = 1
     // 미입금 조회 search_type =4, balance != 0
     if (req.query.deposit_amount_not) {
-      conditions.push(`balance != 0`)
+      conditions.push(`deposit_amount = 0`)
     }
     function addCondition (field, value, operator = '=') {
       if (value && value !== '전체' && value !== 'All') {
@@ -201,9 +219,11 @@ app.get('/api/records', async (req, res) => {
 
     if (id) {
       addCondition('id', id)
+    } else if (passport_number) {
+      addCondition('passport_number', passport_number)
     } else {
       addCondition('passport_name', name)
-      addCondition('passport_number', passport_number)
+      //addCondition('passport_number', passport_number)
       addCondition('visa_type', visa_type)
 
       if (nationality && nationality !== 'All') {
@@ -264,24 +284,28 @@ app.get('/api/records', async (req, res) => {
           NULL AS tel_number_kor,
           SUM(deposit_amount) AS deposit_sum
         FROM ${table}
-        ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
+        ${
+          conditions.length > 0
+            ? 'WHERE ' + conditions.join(' AND ') + ' AND balance = 0'
+            : 'WHERE balance = 0'
+        }
         ORDER BY id DESC
       `
     } else if (search_type == 2) {
-      // 미입금만 조회 (balance = 0 조건 포함)
+      // 미입금만 조회 (deposit_amount = 0 조건 포함)
       query = `
     SELECT id, nationality, passport_name, visa_type, passport_number, phone_type, 
     sim_price, deposit_amount, balance, loan_pre_priority, entry_date, tel_number_kor
     FROM ${table}
     ${
       conditions.length > 0
-        ? 'WHERE ' + conditions.join(' AND ') + ' AND balance = 0'
-        : 'WHERE balance = 0'
+        ? 'WHERE ' + conditions.join(' AND ') + ' AND deposit_amount = 0'
+        : 'WHERE deposit_amount = 0'
     }
     ORDER BY id DESC
   `
     } else if (search_type == 3) {
-      // 전체 조회 (balance 조건 없음)
+      // 전체 조회
       query = `
     SELECT id, nationality, passport_name, visa_type, passport_number, phone_type, 
     sim_price, deposit_amount, balance, loan_pre_priority, entry_date, tel_number_kor
@@ -312,6 +336,10 @@ app.get('/api/records', async (req, res) => {
 
 // 레코드 수정 API
 app.put('/api/records/:passport_number', async (req, res) => {
+  console.log(
+    'Received request for app.put(/api/records/:passport_number with query:',
+    req.query
+  )
   const { jobGubun } = req.query
   const table = jobGubun === 'E' ? 'error_table' : 'mkf_master'
   try {
@@ -347,6 +375,10 @@ app.put('/api/records/:passport_number', async (req, res) => {
   }
 })
 app.put('/api/records/:id', async (req, res) => {
+  console.log(
+    'Received request for app.put(/api/records/:id with query:',
+    req.query
+  )
   const { jobGubun } = req.query
   const table = jobGubun === 'E' ? 'error_table' : 'mkf_master'
   try {
@@ -462,6 +494,10 @@ app.put('/api/records/:id', async (req, res) => {
 
 // server.js
 app.post('/api/download/all', async (req, res) => {
+  console.log(
+    'Received request for app.post(/api/download/all with body:',
+    req.body
+  )
   const jobGubun = req.body.jobGubun || 'M'
   const keys = req.body.keys || []
   if (!Array.isArray(keys) || keys.length === 0) return res.json([])
@@ -478,6 +514,10 @@ app.post('/api/download/all', async (req, res) => {
 
 // 예시: server.js 또는 app.js
 app.get('/api/error-data', async (req, res) => {
+  console.log(
+    'Received request for app.get(/api/error-data with query:',
+    req.query
+  )
   // 쿼리 파라미터 추출
   const {
     commit_date,
@@ -524,6 +564,10 @@ app.get('/api/error-data', async (req, res) => {
 })
 // SQL 쿼리 실행 API
 app.post('/api/records', async (req, res) => {
+  console.log(
+    'Received request for app.post(/api/records with query:',
+    req.query
+  )
   const { jobGubun } = req.query
   const table = jobGubun === 'E' ? 'error_table' : 'mkf_master'
 
@@ -554,6 +598,10 @@ app.post('/api/records', async (req, res) => {
   }
 })
 app.post('/execute-query', async (req, res) => {
+  console.log(
+    'Received request for app.post(/execute-query with body:',
+    req.body
+  )
   const { queries } = req.body // 여러 쿼리를 배열로 받음
   let errorCount = 0
   let errorList = []
