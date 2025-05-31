@@ -143,10 +143,29 @@ async function executeUpdates (updates) {
       return
     }
     const result = await response.json()
-    showResultModal(result)
+    let results = []
 
-    // const message = await response.text()
-    // alert(message)
+    if (Array.isArray(result)) {
+      results = result
+    } else if (result && Array.isArray(result.results)) {
+      results = result.results
+    } else {
+      // 결과가 없거나 형식이 다르면 빈 배열로 처리
+      results = []
+    }
+
+    // totalCount: 엑셀 데이터 건수 (updates.length와 동일)
+    const totalCount = updates.length
+    // 성공: status === 'success'
+    const successCount = results.filter(r => r.status === 'success').length
+    // 실패: status !== 'success'
+    const errorCount = results.filter(r => r.status !== 'success').length
+    console.log('results:', results)
+    alert(
+      `총 건수: ${totalCount}건\n` +
+        `정상 처리: ${successCount}건\n` +
+        `오류: ${errorCount}건`
+    )
   } catch (error) {
     console.error('Error executing updates:', error)
     alert('서버와의 통신 중 오류가 발생했습니다.')

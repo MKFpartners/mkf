@@ -244,7 +244,11 @@ app.get('/api/records', async (req, res) => {
         deposit_amount, balance, loan_pre_priority, entry_date, tel_number_kor,
         NULL AS deposit_sum
         FROM ${table}
-        ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
+        ${
+          conditions.length > 0
+            ? 'WHERE ' + conditions.join(' AND ') + ' AND balance = 0'
+            : 'WHERE balance = 0'
+        }
         UNION ALL
         SELECT 
           NULL AS id,
@@ -269,7 +273,11 @@ app.get('/api/records', async (req, res) => {
         SELECT id, nationality, passport_name, visa_type, passport_number, phone_type, 
         sim_price, deposit_amount, balance, loan_pre_priority, entry_date, tel_number_kor
         FROM ${table}
-        ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
+        ${
+          conditions.length > 0
+            ? 'WHERE ' + conditions.join(' AND ') + ' AND balance = 0'
+            : 'WHERE balance = 0'
+        }
         ORDER BY id DESC
       `
     }
@@ -532,19 +540,21 @@ app.post('/execute-query', async (req, res) => {
   const { queries } = req.body // 여러 쿼리를 배열로 받음
   let errorCount = 0
   let errorList = []
-
+  const results = []
   //const client = await pool.connect() // 트랜잭션을 위해 클라이언트 연결
   //---------------------------------
 
   for (const query of queries) {
     try {
       await pool.query(query)
+      results.push({ status: 'success' })
     } catch (err) {
+      results.push({ status: 'fail', error: err.message })
       errorCount++
-      errorList.push({
-        error_code: err.code || 'UNKNOWN',
-        message: err.message
-      })
+      // errorList.push({
+      //   error_code: err.code || 'UNKNOWN',
+      //   message: err.message
+      // })
     }
   }
   // 쿼리 실행 후 각 테이블의 건수 조회
@@ -558,21 +568,22 @@ app.post('/execute-query', async (req, res) => {
   ])
   const mkfCount = mkfResult.rows[0].count
   const errorTableCount = errorResult.rows[0].count
-
   if (errorCount > 0) {
     res.status(207).json({
       result: 'partial_fail',
       error_count: errorCount,
       errors: errorList,
       mkf_master_count: mkfCount,
-      error_table_count: errorTableCount
+      error_table_count: errorTableCount,
+      results // ← 추가!
     })
   } else {
     res.json({
       result: 'success',
       error_count: 0,
       mkf_master_count: mkfCount,
-      error_table_count: errorTableCount
+      error_table_count: errorTableCount,
+      results // ← 추가!
     })
   }
 })

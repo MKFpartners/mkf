@@ -630,7 +630,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 updatedData[key] = value.trim() === '' ? null : value
               }
             })
-
+            if (
+              updatedData.visa_type === 'E8' &&
+              updatedData.loan_pre_priority != 3 // 3이 Not Interested
+            ) {
+              alert(
+                "visa_type = 'E8'이면 loan preference = Not interested가 되어야 합니다."
+              )
+              return
+            }
+            if (
+              updatedData.visa_type === 'E9' &&
+              updatedData.loan_pre_priority == 3 // 3이 Not Interested
+            ) {
+              alert(
+                "visa_type = 'E9'이면 loan preference = High Priority 또는 Preferred가 되어야 합니다."
+              )
+              return
+            }
             console.log('main.js: 수정 데이터1:', updatedData)
             const jobGubun = document.querySelector(
               'input[name="jobGubun"]:checked'

@@ -518,7 +518,24 @@ document.getElementById('compareButton').addEventListener('click', function () {
                     alert('sim_price  값을 입력하세요.')
                     return
                   }
-
+                  if (
+                    updateData.visa_type === 'E8' &&
+                    updateData.loan_pre_priority != 3 // 3이 Not Interested
+                  ) {
+                    alert(
+                      "visa_type = 'E8'이면 loan preference = Not interested가 되어야 합니다."
+                    )
+                    return
+                  }
+                  if (
+                    updateData.visa_type === 'E9' &&
+                    updateData.loan_pre_priority == 3 // 3이 Not Interested
+                  ) {
+                    alert(
+                      "visa_type = 'E9'이면 loan preference = High Priority 또는 Preferred가 되어야 합니다."
+                    )
+                    return
+                  }
                   const simPrice = Number(updateData.sim_price)
                   const depositAmount = Number(updateData.deposit_amount)
                   const balance = Number(updateData.balance)
