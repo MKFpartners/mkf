@@ -267,20 +267,37 @@ app.get('/api/records', async (req, res) => {
         ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
         ORDER BY id DESC
       `
-    } else {
-      // 일반 조회 쿼리
+    } else if (search_type == 2) {
+      // 미입금만 조회 (balance = 0 조건 포함)
       query = `
-        SELECT id, nationality, passport_name, visa_type, passport_number, phone_type, 
-        sim_price, deposit_amount, balance, loan_pre_priority, entry_date, tel_number_kor
-        FROM ${table}
-        ${
-          conditions.length > 0
-            ? 'WHERE ' + conditions.join(' AND ') + ' AND balance = 0'
-            : 'WHERE balance = 0'
-        }
-        ORDER BY id DESC
-      `
+    SELECT id, nationality, passport_name, visa_type, passport_number, phone_type, 
+    sim_price, deposit_amount, balance, loan_pre_priority, entry_date, tel_number_kor
+    FROM ${table}
+    ${
+      conditions.length > 0
+        ? 'WHERE ' + conditions.join(' AND ') + ' AND balance = 0'
+        : 'WHERE balance = 0'
     }
+    ORDER BY id DESC
+  `
+    } else if (search_type == 3) {
+      // 전체 조회 (balance 조건 없음)
+      query = `
+    SELECT id, nationality, passport_name, visa_type, passport_number, phone_type, 
+    sim_price, deposit_amount, balance, loan_pre_priority, entry_date, tel_number_kor
+    FROM ${table}
+    ${conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : ''}
+    ORDER BY id DESC
+  `
+    }
+    // ★ 조건이 없으면 values도 비워야 함
+    if (conditions.length === 0) {
+      values = []
+    }
+    if (!query.includes('$1')) {
+      values = []
+    }
+
     console.log('서버의 query:', query, 'with values:', values) // 쿼리 로깅
     const result = await pool.query(query, values)
     console.log(`Found ${result.rows.length} records`) // 결과 로깅
