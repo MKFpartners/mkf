@@ -167,17 +167,20 @@ app.get('/api/records', async (req, res) => {
       passport_number = '',
       visa_type = '전체',
       commitDateFrom = null,
-      commitDateTo = null,
-      search_type = 0
+      commitDateTo = null
     } = req.query
 
     let query = `SELECT * FROM ${table}`
     let conditions = []
     let values = []
     let paramCount = 1
-    // 미입금 조회 search_type =4, balance != 0
-    if (req.query.deposit_amount_not) {
+    const search_type = req.query.search_type
+    console.log('search_type:=', search_type) // search_type 로깅
+    // 미입금 조회 search_type =2, deposit_amount = 0
+    if (search_type == 2) {
       conditions.push(`deposit_amount = 0`)
+    } else if (search_type == 1) {
+      conditions.push(`balance = 0`)
     }
     function addCondition (field, value, operator = '=') {
       if (value && value !== '전체' && value !== 'All') {
@@ -230,12 +233,6 @@ app.get('/api/records', async (req, res) => {
         addCondition('nationality', nationality)
       }
 
-      /* if (name && name !== '') {
-        conditions.push(`passport_name = $${paramCount}`)
-        values.push(name)
-        paramCount++
-      }*/
-
       if (commitDateFrom) {
         const dateStr = parseAndValidateDate(commitDateFrom)
         if (dateStr) {
@@ -254,7 +251,8 @@ app.get('/api/records', async (req, res) => {
         }
       }
     }
-    //const search_type = parseInt(req.query.search_type || '0', 10) // 문자열을 숫자로 변환
+    //search_type = parseInt(req.query.search_type || '0', 10) // 문자열을 숫자로 변환
+    console.log('search_type:', search_type) // search_type 로깅
     if (search_type == 1) {
       console.log('Executing deposit sum query select_type = 1...')
       // 입금조회일 경우 합계 데이터를 포함한 쿼리
@@ -304,7 +302,7 @@ app.get('/api/records', async (req, res) => {
     }
     ORDER BY id DESC
   `
-    } else if (search_type == 3) {
+    } else if (search_type == 0) {
       // 전체 조회
       query = `
     SELECT id, nationality, passport_name, visa_type, passport_number, phone_type, 

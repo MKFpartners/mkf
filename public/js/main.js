@@ -25,6 +25,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const checkboxes = document.querySelectorAll('input[type="checkbox"]') // 모든 체크박스
   const recordsList = document.getElementById('records-list') // 리스트의 목록
 
+  // const jobGubunRadios = document.querySelectorAll(
+  //         'input[name="jobGubun"]'
+  //       )
+  //       jobGubunRadios.forEach(radio => {
+  //         radio.addEventListener('change', function () {
+  //           window.tableGubun_sw = this.value
+  //         })
+  //       }
+
   // Nationality의 기본값을 'Cambodia'로 설정
   if (nationalitySelect) {
     nationalitySelect.value = 'Cambodia'
@@ -143,6 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
         // if (passportFilter && passportFilter.value !== '') {
         //   params.append('passport_number', passportFilter.value)
         // }
+        if (search_type !== undefined && search_type !== null) {
+          params.append('search_type', search_type)
+        }
         if (commitDateFromInput.value.trim()) {
           params.append('commitDateFrom', commitDateFromInput.value.trim())
         }
@@ -155,7 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
           params.append('visa_type', 'E9')
         } else if (search_type === 4) {
           // 미입금조회
-          params.append('deposit_amount_not', '0') // 'deposit_amount_not' 키로 전달
+          params.append('deposit_amount', '0')
         }
       }
 
@@ -630,16 +642,8 @@ document.addEventListener('DOMContentLoaded', () => {
       //console.log('main.js: 디버깅 : detailForm:', detailForm)
 
       // 라디오 버튼 변경 시 tableGubun_sw 값 갱신
-      document.addEventListener('DOMContentLoaded', () => {
-        const jobGubunRadios = document.querySelectorAll(
-          'input[name="jobGubun"]'
-        )
-        jobGubunRadios.forEach(radio => {
-          radio.addEventListener('change', function () {
-            window.tableGubun_sw = this.value
-          })
-        })
-      })
+      //document.addEventListener('DOMContentLoaded', () => {
+
       // const jobGubun = document.querySelectorAll('input[name="jobGubun"]')
       // fetch(`/api/records?jobGubun=${jobGubun}`)
 
@@ -851,33 +855,33 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!passwordCheck()) {
         return // 암호 확인 실패 시 작업 중단
       }
-      window.search_type = 2 // 대출요청 체크 시
+      window.search_type = 3 // 대출요청 체크 시
     } else if (nodepositCheck.checked) {
       if (!passwordCheck()) {
         return // 암호 확인 실패 시 작업 중단
       }
-      window.search_type = 4 // 비입금조회
+      window.search_type = 2 // 비입금조회
     } else {
-      window.search_type = 3 // 둘 다 체크되지 않은 경우
+      window.search_type = 0 // 전체 조회
     }
     console.log(`search_type: ${window.search_type}`) // 디버깅용 출력
 
-    if (window.search_type === 1) {
-      // 입금조회일 경우 합계를 가져옴
+    if (window.search_type === 1 || window.search_type === 2) {
       try {
-        console.log(`Fetching URL: /api/records?search_type=1`)
         const jobGubun = document.querySelector(
           'input[name="jobGubun"]:checked'
         ).value
-        const response = await fetch(
-          `/api/records?search_type=1&jobGubun=${jobGubun}`
-        )
-        console.log('Response received:', response)
+        const params = new URLSearchParams()
+        params.append('search_type', window.search_type)
+        params.append('jobGubun', jobGubun)
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
-        }
+        const response = await fetch(`/api/records?${params.toString()}`)
         const data = await response.json()
+
+        if (!data || (Array.isArray(data) && data.length === 0)) {
+          alert('조회 결과가 없습니다.')
+          return
+        }
         console.log('Response data:', data.length, ' 건') // 서버에서 반환된 데이터 확인
 
         // deposit_sum 값 추출
