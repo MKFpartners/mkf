@@ -146,7 +146,11 @@ document.addEventListener('DOMContentLoaded', () => {
           recordsList.innerHTML =
             '<tr><td colspan="7">데이터가 없습니다.</td></tr>'
         }
-        totalRecordsElement.textContent = dataArr.length
+        if (search_type === 1) {
+          totalRecordsElement.textContent = dataArr.length - 1
+        } else {
+          totalRecordsElement.textContent = dataArr.length
+        }
         return // 여기서 함수 종료
       } else {
         //3: 대출희망, 2: 미입금조회
@@ -191,21 +195,21 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('API 응답 데이터:', data)
 
       if (Array.isArray(data) && data.length > 0) {
-        console.log('Original data:', data); // 디버깅용 로그 추가
-        console.log('Search type:', window.search_type); // 디버깅용 로그 추가
-        
-        let displayData = data;
+        console.log('Original data:', data) // 디버깅용 로그 추가
+        console.log('Search type:', window.search_type) // 디버깅용 로그 추가
+
+        let displayData = data
         if (window.search_type === 1) {
           // 첫 번째 데이터의 구조 확인
-          console.log('First data structure:', data[0]); // 첫 번째 데이터의 구조 로깅
-          
+          console.log('First data structure:', data[0]) // 첫 번째 데이터의 구조 로깅
+
           // deposit_sum이 있는지 확인
-          const isFirstDataNull = data[0] && data[0].deposit_sum !== undefined;
-          console.log('Is first data deposit_sum:', isFirstDataNull); // 디버깅용 로그 추가
-          
+          const isFirstDataNull = data[0] && data[0].deposit_sum !== undefined
+          console.log('Is first data deposit_sum:', isFirstDataNull) // 디버깅용 로그 추가
+
           if (isFirstDataNull) {
-            displayData = data.slice(1);
-            console.log('Filtered data:', displayData); // 디버깅용 로그 추가
+            displayData = data.slice(1)
+            console.log('Filtered data:', displayData) // 디버깅용 로그 추가
           }
         }
 
@@ -251,7 +255,11 @@ document.addEventListener('DOMContentLoaded', () => {
         recordsList.innerHTML =
           '<tr><td colspan="7">데이터가 없습니다.</td></tr>'
       }
-      totalRecordsElement.textContent = data.length
+      if (window.search_type === 1) {
+        totalRecordsElement.textContent = data.length - 1
+      } else {
+        totalRecordsElement.textContent = data.length
+      }
     } catch (error) {
       console.error('데이터 로드 중 오류:', error)
       alert('데이터를 불러오는데 실패했습니다.')
