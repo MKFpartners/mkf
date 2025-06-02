@@ -289,15 +289,15 @@ app.get('/api/records', async (req, res) => {
         ORDER BY id DESC
       `
     } else if (search_type == 2) {
-      // 미입금만 조회 (deposit_amount = 0 조건 포함)
+      // 미입금만 조회 (balance != 0 조건 포함)
       query = `
     SELECT id, nationality, passport_name, visa_type, passport_number, phone_type, 
     sim_price, deposit_amount, balance, loan_pre_priority, entry_date, tel_number_kor
     FROM ${table}
     ${
       conditions.length > 0
-        ? 'WHERE ' + conditions.join(' AND ') + ' AND deposit_amount = 0'
-        : 'WHERE deposit_amount = 0'
+        ? 'WHERE ' + conditions.join(' AND ') + ' AND balance != 0'
+        : 'WHERE balance != 0'
     }
     ORDER BY id DESC
   `
