@@ -85,8 +85,26 @@ document.addEventListener('DOMContentLoaded', () => {
         // data가 객체 1개이므로 배열로 변환
         const dataArr = data ? [data] : []
         // 이하 기존 코드에서 data를 dataArr로 사용
-        if (dataArr.length > 0) {
-          recordsList.innerHTML = dataArr
+        let listData = data
+        // if (
+        //   Array.isArray(data) &&
+        //   data.length > 1 &&
+        //   data[0]?.deposit_sum !== undefined
+        // ) {
+        //   if (search_type === 1) {
+        //     listData = data.slice(1) // 첫 데이터(합계) 제외
+        //   } else {
+        //     listData = data.slice(0) // 전체 데이터 사용
+        //   }
+        // }
+        if (search_type === 1) {
+          listData = data.slice(1) // 첫 데이터(합계) 제외
+        } else {
+          listData = data.slice(0) // 전체 데이터 사용
+        }
+        console.log('listData=', listData)
+        if (listData.length > 0) {
+          recordsList.innerHTML = listData
             .map(
               record => `
           <tr onclick="showDetail(${record.id ? `'${record.id}'` : 'null'}, '${
@@ -131,8 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
         totalRecordsElement.textContent = dataArr.length
         return // 여기서 함수 종료
       } else {
-        //2: 대출희망, 4: 미입금조회
-        if (search_type === 2 || search_type === 4) {
+        //3: 대출희망, 2: 미입금조회
+        if (search_type === 2 || search_type === 3) {
           // 입금액 초기화
           const depositSumElement = document.getElementById('deposit-sum') // 입금액 표시 필드
           console.log('depositSumElement:', depositSumElement) // 디버깅용 출력
@@ -161,14 +179,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (commitDateToInput.value.trim()) {
           params.append('commitDateTo', commitDateToInput.value.trim())
         }
-        // 대출희망 체크 시 visa_type을 'E9'로 고정
-        if (search_type === 2) {
-          //params.append('loan_pre_priority', '1')
-          params.append('visa_type', 'E9')
-        } else if (search_type === 4) {
-          // 미입금조회
-          params.append('deposit_amount', '0')
-        }
       }
 
       jobGubun = document.querySelector('input[name="jobGubun"]:checked').value
@@ -181,7 +191,25 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('API 응답 데이터:', data)
 
       if (Array.isArray(data) && data.length > 0) {
-        recordsList.innerHTML = data
+        console.log('Original data:', data); // 디버깅용 로그 추가
+        console.log('Search type:', window.search_type); // 디버깅용 로그 추가
+        
+        let displayData = data;
+        if (window.search_type === 1) {
+          // 첫 번째 데이터의 구조 확인
+          console.log('First data structure:', data[0]); // 첫 번째 데이터의 구조 로깅
+          
+          // deposit_sum이 있는지 확인
+          const isFirstDataNull = data[0] && data[0].deposit_sum !== undefined;
+          console.log('Is first data deposit_sum:', isFirstDataNull); // 디버깅용 로그 추가
+          
+          if (isFirstDataNull) {
+            displayData = data.slice(1);
+            console.log('Filtered data:', displayData); // 디버깅용 로그 추가
+          }
+        }
+
+        recordsList.innerHTML = displayData
           .map(
             record => `
                       <tr onclick="showDetail(${
@@ -860,7 +888,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!passwordCheck()) {
         return // 암호 확인 실패 시 작업 중단
       }
-      window.search_type = 2 // 비입금조회
+      window.search_type = 2 // 미입금조회
     } else {
       window.search_type = 0 // 전체 조회
     }
@@ -878,15 +906,39 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch(`/api/records?${params.toString()}`)
         const data = await response.json()
 
-        if (!data || (Array.isArray(data) && data.length === 0)) {
+        // 모든 값이 null(합계만 있고 실제 데이터가 없는 경우) 또는 빈 배열일 때
+        if (
+          !data ||
+          (Array.isArray(data) &&
+            (data.length === 0 ||
+              (data.length === 1 &&
+                data[0] &&
+                Object.values(data[0]).every(v => v === null))))
+        ) {
+          if (recordsList) {
+            recordsList.innerHTML = ''
+          }
+          totalRecordsElement.textContent = '0'
           alert('조회 결과가 없습니다.')
           return
         }
+
         console.log('Response data:', data.length, ' 건') // 서버에서 반환된 데이터 확인
 
         // deposit_sum 값 추출
         const depositSum = data[0]?.deposit_sum || 0 // 첫 번째 레코드에서 deposit_sum 추출
-
+        let listData = data
+        if (
+          Array.isArray(data) &&
+          data.length > 1 &&
+          data[0]?.deposit_sum !== undefined
+        ) {
+          listData = data.slice(1) // 첫 데이터(합계) 제외
+          console.log('listData length=', listData.length) // 디버깅용 출력
+          if (listData.length === 0) {
+            return
+          }
+        }
         // DOM 요소에 업데이트
         const depositSumElement = document.getElementById('deposit-sum') // 입금액 표시 필드
         if (depositSumElement) {

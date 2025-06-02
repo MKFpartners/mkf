@@ -176,12 +176,12 @@ app.get('/api/records', async (req, res) => {
     let paramCount = 1
     const search_type = req.query.search_type
     console.log('search_type:=', search_type) // search_type 로깅
-    // 미입금 조회 search_type =2, deposit_amount = 0
-    if (search_type == 2) {
-      conditions.push(`deposit_amount = 0`)
-    } else if (search_type == 1) {
-      conditions.push(`balance = 0`)
-    }
+    // // 미입금 조회 search_type =2, deposit_amount = 0
+    // if (search_type == 2) {
+    //   conditions.push(`deposit_amount = 0`)
+    // } else if (search_type == 1) {
+    //   conditions.push(`balance = 0`)
+    // }
     function addCondition (field, value, operator = '=') {
       if (value && value !== '전체' && value !== 'All') {
         conditions.push(`${field} ${operator} $${paramCount}`)
@@ -251,7 +251,6 @@ app.get('/api/records', async (req, res) => {
         }
       }
     }
-    //search_type = parseInt(req.query.search_type || '0', 10) // 문자열을 숫자로 변환
     console.log('search_type:', search_type) // search_type 로깅
     if (search_type == 1) {
       console.log('Executing deposit sum query select_type = 1...')
@@ -299,6 +298,19 @@ app.get('/api/records', async (req, res) => {
       conditions.length > 0
         ? 'WHERE ' + conditions.join(' AND ') + ' AND deposit_amount = 0'
         : 'WHERE deposit_amount = 0'
+    }
+    ORDER BY id DESC
+  `
+    } else if (search_type == 3) {
+      // 대출요청
+      query = `
+    SELECT id, nationality, passport_name, visa_type, passport_number, phone_type, 
+    sim_price, deposit_amount, balance, loan_pre_priority, entry_date, tel_number_kor
+    FROM ${table}
+    ${
+      conditions.length > 0
+        ? 'WHERE ' + conditions.join(' AND ') + " AND visa_type = 'E9'"
+        : "WHERE visa_type = 'E9'"
     }
     ORDER BY id DESC
   `
