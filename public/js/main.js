@@ -82,25 +82,14 @@ document.addEventListener('DOMContentLoaded', () => {
           )
         }
         const data = await response.json()
-        // data가 객체 1개이므로 배열로 변환
-        const dataArr = data ? [data] : []
-        // 이하 기존 코드에서 data를 dataArr로 사용
-        let listData = data
-        // if (
-        //   Array.isArray(data) &&
-        //   data.length > 1 &&
-        //   data[0]?.deposit_sum !== undefined
-        // ) {
-        //   if (search_type === 1) {
-        //     listData = data.slice(1) // 첫 데이터(합계) 제외
-        //   } else {
-        //     listData = data.slice(0) // 전체 데이터 사용
-        //   }
-        // }
+        // 단일 객체가 오면 배열로 변환
+        let normalizedData = Array.isArray(data) ? data : [data]
+        let listData = normalizedData
+
         if (search_type === 1) {
-          listData = data.slice(1) // 첫 데이터(합계) 제외
+          listData = normalizedData.slice(1) // 첫 데이터(합계) 제외
         } else {
-          listData = data.slice(0) // 전체 데이터 사용
+          listData = normalizedData
         }
         console.log('listData=', listData)
         if (listData.length > 0) {
@@ -147,13 +136,13 @@ document.addEventListener('DOMContentLoaded', () => {
             '<tr><td colspan="7">데이터가 없습니다.</td></tr>'
         }
         if (search_type === 1) {
-          totalRecordsElement.textContent = dataArr.length - 1
+          totalRecordsElement.textContent = listData.length - 1
         } else {
-          totalRecordsElement.textContent = dataArr.length
+          totalRecordsElement.textContent = listData.length
         }
         return // 여기서 함수 종료
       } else {
-        //3: 대출희망, 2: 미입금조회
+        // 2: 미입금조회, 3: 대출희망
         if (search_type === 2 || search_type === 3) {
           // 입금액 초기화
           const depositSumElement = document.getElementById('deposit-sum') // 입금액 표시 필드
@@ -282,6 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 상세 정보 표시 함수
   window.showDetail = async (id, passport_number) => {
+    window.isCompareMode = false // 상세 정보 표시 시 compare 모드 초기화
     const jobGubun = document.querySelector(
       'input[name="jobGubun"]:checked'
     ).value
@@ -304,6 +294,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (id && id !== 'null') {
       // id가 있으면 항상 id로 조회
+      console.log('id로 검색. id=', id)
       url = `/api/records/${id}?jobGubun=${jobGubun}`
     } else if (passport_number) {
       // error_table 조회 시 passport_number만 사용, 다른 param 무시
@@ -344,6 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sim_price: 'SIM Price ($) (유심비($))',
         deposit_amount: 'Deposit Amount ($) (입금액($))',
         balance: 'Balance ($) (입금할 금액($))',
+        opening_date: 'Opening Date (개통일자)',
         loan_pre_priority: 'Loan Preference (대출구분)',
         entry_date: 'Entry Date (한국입국날짜)',
         tel_number_cam: 'Phone Number (Cambodia) (전화번호(캄보디아))',
@@ -390,7 +382,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'passport_number',
         'signature',
         'sim_price',
-        //'deposit_amount',
         'sender_name',
         'sender_email',
         'sent_date',
@@ -425,11 +416,13 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 날짜 필드 정리
-      ;['sent_date', 'commit_date', 'entry_date'].forEach(key => {
-        if (currentRecord[key]) {
-          currentRecord[key] = cleanDateField(currentRecord[key])
+      ;['sent_date', 'commit_date', 'entry_date', 'opening_date'].forEach(
+        key => {
+          if (currentRecord[key]) {
+            currentRecord[key] = cleanDateField(currentRecord[key])
+          }
         }
-      })
+      )
       detailView.classList.remove('hidden')
       listView.classList.add('hidden')
 
@@ -619,7 +612,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                         'sent_date',
                                         'completion_date',
                                         'entry_date',
-                                        'deposit_date'
+                                        'deposit_date',
+                                        'opening_date'
                                       ].includes(key)
                                       return `
                                           <tr>
@@ -675,13 +669,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       // 디버깅: detailForm 확인
       const detailForm = document.getElementById('detailForm')
-      //console.log('main.js: 디버깅 : detailForm:', detailForm)
-
-      // 라디오 버튼 변경 시 tableGubun_sw 값 갱신
-      //document.addEventListener('DOMContentLoaded', () => {
-
-      // const jobGubun = document.querySelectorAll('input[name="jobGubun"]')
-      // fetch(`/api/records?jobGubun=${jobGubun}`)
 
       // "목록" 버튼 이벤트 리스너
       document
@@ -692,7 +679,6 @@ document.addEventListener('DOMContentLoaded', () => {
       function backToList () {
         detailView.classList.add('hidden')
         listView.classList.remove('hidden')
-        // Ensure the search button is enabled and the inactive class is removed
         const searchButtonOnList = document.getElementById('searchButton')
         if (searchButtonOnList) {
           searchButtonOnList.disabled = false
@@ -722,7 +708,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const formData = new FormData(document.getElementById('detailForm'))
             const updatedData = {}
             formData.forEach((value, key) => {
-              if (['commit_date', 'sent_date', 'entry_date'].includes(key)) {
+              if (
+                [
+                  'commit_date',
+                  'sent_date',
+                  'entry_date',
+                  'opening_date'
+                ].includes(key)
+              ) {
                 updatedData[key] = cleanDateField(value)
               } else if (
                 key === 'loan_pre_priority' ||
@@ -777,17 +770,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify(updatedData)
               })
             } else {
-              // 기존 데이터 수정(PUT)
-              response = await fetch(
-                `/api/records/${currentRecord.id}?jobGubun=${jobGubun}`,
-                {
-                  method: 'PUT',
-                  headers: {
-                    'Content-Type': 'application/json'
-                  },
-                  body: JSON.stringify(updatedData)
-                }
-              )
+              // compare 버튼을 통해 수정하는 경우 passport_number로 업데이트
+              if (window.isCompareMode) {
+                response = await fetch(
+                  `/api/records/passport${currentRecord.passport_number}?jobGubun=${jobGubun}`,
+                  {
+                    method: 'PUT',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedData)
+                  }
+                )
+              } else {
+                // 일반 수정의 경우 ID로 업데이트
+                response = await fetch(
+                  `/api/records/id/${currentRecord.id}?jobGubun=${jobGubun}`,
+                  {
+                    method: 'PUT',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedData)
+                  }
+                )
+              }
             }
 
             if (!response.ok) throw new Error('저장 실패')
@@ -964,6 +971,174 @@ document.addEventListener('DOMContentLoaded', () => {
       loadRecords(window.search_type)
     }
   })
+
+  // OpeningCheck 버튼 이벤트 리스너 추가
+  const openingCheckButton = document.getElementById('openingCheckButton')
+  if (openingCheckButton) {
+    openingCheckButton.addEventListener('click', () => {
+      // 팝업 창 생성
+      const popup = document.createElement('div')
+      popup.className = 'memo-popup'
+      popup.innerHTML = `
+        <div class="memo-popup-content">
+          <h3>메모 입력</h3>
+          <textarea id="memoInput" rows="10" cols="50" placeholder="메모를 입력하세요..."></textarea>
+          <div class="memo-buttons">
+            <button id="saveMemo" class="primary-button">적용</button>
+            <button id="cancelMemo" class="secondary-button">취소</button>
+          </div>
+        </div>
+      `
+
+      // 팝업 스타일 설정
+      const style = document.createElement('style')
+      style.textContent = `
+        .memo-popup {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0, 0, 0, 0.5);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          z-index: 1000;
+        }
+        .memo-popup-content {
+          background-color: white;
+          padding: 20px;
+          border-radius: 5px;
+          box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+          width: 80%;
+          max-width: 500px;
+        }
+        .memo-popup h3 {
+          margin-top: 0;
+          margin-bottom: 15px;
+        }
+        .memo-popup textarea {
+          width: 100%;
+          margin-bottom: 15px;
+          padding: 10px;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          resize: vertical;
+        }
+        .memo-buttons {
+          display: flex;
+          justify-content: flex-end;
+          gap: 10px;
+        }
+        .memo-buttons button {
+          padding: 8px 20px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        .memo-buttons .primary-button {
+          background-color: #4CAF50;
+          color: white;
+        }
+        .memo-buttons .secondary-button {
+          background-color: #f44336;
+          color: white;
+        }
+      `
+      document.head.appendChild(style)
+
+      // 팝업을 body에 추가
+      document.body.appendChild(popup)
+
+      // 저장 버튼 이벤트 리스너
+      document
+        .getElementById('saveMemo')
+        .addEventListener('click', async () => {
+          const password = prompt('암호를 입력하십시오:')
+          if (password === null) {
+            alert('작업이 취소되었습니다.')
+            return
+          }
+          if (password !== '2233') {
+            alert('잘못된 암호입니다. 저장이 취소되었습니다.')
+            return
+          }
+
+          const memoText = document.getElementById('memoInput').value
+          const lines = memoText.split('\n').filter(line => line.trim() !== '') // 빈 줄 제거
+
+          let totalSuccessCount = 0
+          let totalErrorTableCount = 0
+          let totalOtherErrorCount = 0
+
+          for (let i = 0; i + 3 < lines.length; i += 4) {
+            const passport_name = lines[i].trim()
+            const passport_number = lines[i + 1].trim()
+            const tel_number_kor = lines[i + 2].trim()
+            const status = lines[i + 3].trim()
+
+            // '개통완료'가 아닌 경우는 건너뜀
+            if (status !== '개통완료') continue
+
+            try {
+              const response = await fetch('/api/records/update-opening', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  passport_name,
+                  passport_number,
+                  tel_number_kor
+                })
+              })
+
+              if (!response.ok) {
+                throw new Error('업데이트 실패')
+              }
+
+              const result = await response.json()
+              console.log('업데이트 결과:', result)
+
+              if (result.statistics) {
+                totalSuccessCount += result.statistics.successCount
+                totalErrorTableCount += result.statistics.errorTableCount
+                totalOtherErrorCount += result.statistics.otherErrorCount
+              }
+            } catch (error) {
+              console.error('업데이트 중 오류:', error)
+              alert(`데이터 업데이트 중 오류가 발생했습니다: ${passport_name}`)
+            }
+          }
+
+          alert(
+            `전체 처리 결과:\n정상 업데이트: ${totalSuccessCount}건\n에러테이블 입력: ${totalErrorTableCount}건\n기타 오류: ${totalOtherErrorCount}건`
+          )
+          document.body.removeChild(popup)
+        })
+
+      // 취소 버튼 이벤트 리스너
+      document.getElementById('cancelMemo').addEventListener('click', () => {
+        document.body.removeChild(popup)
+      })
+
+      // 팝업 외부 클릭 시 닫기
+      popup.addEventListener('click', e => {
+        if (e.target === popup) {
+          document.body.removeChild(popup)
+        }
+      })
+    })
+  }
+
+  // compare 버튼 클릭 이벤트
+  const compareButton = document.getElementById('compareButton')
+  if (compareButton) {
+    compareButton.addEventListener('click', () => {
+      window.isCompareMode = true
+      // 기존 compare 버튼 로직...
+    })
+  }
 })
 function passwordCheck () {
   const password = prompt('암호를 입력하십시오:')

@@ -344,49 +344,10 @@ app.get('/api/records', async (req, res) => {
   }
 })
 
-// 레코드 수정 API
-app.put('/api/records/:passport_number', async (req, res) => {
+// ID로 업데이트하는 라우트를 먼저 정의
+app.put('/api/records/id/:id', async (req, res) => {
   console.log(
-    'Received request for app.put(/api/records/:passport_number with query:',
-    req.query
-  )
-  const { jobGubun } = req.query
-  const table = jobGubun === 'E' ? 'error_table' : 'mkf_master'
-  try {
-    const { passport_number } = req.params
-    const updateData = req.body
-
-    // id 필드 제거 (passport_number로만 업데이트)
-    delete updateData.id
-
-    // 업데이트할 필드와 값 생성
-    const setClause = Object.keys(updateData)
-      .map((key, index) => `${key} = $${index + 1}`)
-      .join(', ')
-    const values = Object.values(updateData)
-
-    const query = `
-      UPDATE ${table}
-      SET ${setClause}
-      WHERE passport_number = $${values.length + 1}
-      RETURNING *
-    `
-    const result = await pool.query(query, [...values, passport_number])
-
-    if (result.rows.length === 0) {
-      res.status(404).json({ error: '데이터를 찾을 수 없습니다.' })
-      return
-    }
-
-    res.json(result.rows[0])
-  } catch (err) {
-    console.error('Error in updating record by passport_number:', err)
-    res.status(500).json({ error: err.message || '서버 오류가 발생했습니다.' })
-  }
-})
-app.put('/api/records/:id', async (req, res) => {
-  console.log(
-    'Received request for app.put(/api/records/:id with query:',
+    'Received request for app.put(/api/records/id:id with query:',
     req.query
   )
   const { jobGubun } = req.query
@@ -401,7 +362,8 @@ app.put('/api/records/:id', async (req, res) => {
       'sent_date',
       'completion_date',
       'entry_date',
-      'deposit_date'
+      'deposit_date',
+      'opening_date'
     ].forEach(key => {
       if (updateData[key]) {
         // 밀리초(. 이후) 먼저 제거
@@ -488,16 +450,74 @@ app.put('/api/records/:id', async (req, res) => {
     console.log('query = ', query)
     const result = await pool.query(query, [id, ...values])
 
-    //console.log('result = ', result)
     if (result.rows.length === 0) {
-      res.status(404).json({ error: '데이터를 찾을 수 없습니다.' })
-      return
+      console.log('CANNOT FIND ID =', id)
+      return res.status(404).json({ error: '데이터를 찾을 수 없습니다.' })
     }
 
     console.log('Record updated for ID:', id)
     res.json(result.rows[0])
   } catch (err) {
     console.error('Error in updating record:', err)
+    res.status(500).json({ error: err.message || '서버 오류가 발생했습니다.' })
+  }
+})
+
+// passport_number로 업데이트하는 라우트는 나중에 정의
+app.put('/api/records/passport/:passport_number', async (req, res) => {
+  console.log(
+    'Received request for app.put(/api/records/passport:passport_number with query:',
+    req.query
+  )
+  const { jobGubun } = req.query
+  const table = jobGubun === 'E' ? 'error_table' : 'mkf_master'
+  try {
+    const { passport_number } = req.params
+    const updateData = req.body
+    console.log('server.js Received updateData:', updateData)
+    ;[
+      // 날짜/시간 필드 목록
+      'commit_date',
+      'sent_date',
+      'completion_date',
+      'entry_date',
+      'deposit_date',
+      'opening_date'
+    ].forEach(key => {
+      if (updateData[key] === '' || updateData[key] === undefined) {
+        updateData[key] = null
+      }
+    })
+    // passport_number 수정 불가
+    delete updateData.passport_number
+
+    // 업데이트할 필드와 값 생성
+
+    const setClause = Object.keys(updateData)
+      .map((key, index) => `${key} = $${index + 2}`)
+      .join(', ')
+    const values = Object.values(updateData)
+    const query = `
+      UPDATE ${table}
+      SET ${setClause}
+      WHERE passport_number = $1
+      RETURNING *
+    `
+    console.log('update query by passport => ', query)
+    console.log('values = ', values)
+
+    const result = await pool.query(query, [passport_number, ...values])
+
+    if (result.rows.length === 0) {
+      console.log('CANNOT FIND PASSPORT_NUMBER =', passport_number)
+      return res
+        .status(404)
+        .json({ error: '업데이트할 데이터를 찾을 수 없습니다.' })
+    }
+
+    res.json(result.rows[0])
+  } catch (err) {
+    console.error('Error in updating record by passport_number:', err)
     res.status(500).json({ error: err.message || '서버 오류가 발생했습니다.' })
   }
 })
@@ -660,6 +680,48 @@ app.post('/execute-query', async (req, res) => {
       error_table_count: errorTableCount,
       results // ← 추가!
     })
+  }
+})
+
+// 개통 정보 업데이트 API
+app.post('/api/records/update-opening', async (req, res) => {
+  let successCount = 0
+  let errorTableCount = 0
+
+  try {
+    const { passport_name, passport_number, tel_number_kor } = req.body
+
+    let query = `
+      SELECT update_master_opening_enhanced ($1, $2, $3);      
+    `
+    let result = await pool.query(query, [
+      passport_name,
+      passport_number,
+      tel_number_kor
+    ])
+    console.log('opening passport_number = ', passport_number)
+    if (result.rows.length > 0) {
+      console.log('SUCCESSFULLY UPDATED - PASSPORT_NUMBER =', passport_number)
+      successCount++
+    } else {
+      console.log(
+        'FAILED TO update_master_opening PASSPORT_NUMBER =',
+        passport_number
+      )
+      errorTableCount++
+    }
+
+    res.json({
+      success: true,
+      message: '처리가 완료되었습니다.',
+      statistics: {
+        successCount,
+        errorTableCount
+      }
+    })
+  } catch (err) {
+    console.error('Error in /api/records/update-opening:', err)
+    res.status(500).json({ error: '서버 오류가 발생했습니다.' })
   }
 })
 

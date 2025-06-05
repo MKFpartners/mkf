@@ -263,6 +263,7 @@ document.getElementById('compareButton').addEventListener('click', function () {
                 'sim_price',
                 'deposit_amount',
                 'balance',
+                'opening_date',
                 'loan_pre_priority',
                 'entry_date',
                 'tel_number_cam',
@@ -485,22 +486,26 @@ document.getElementById('compareButton').addEventListener('click', function () {
               document.getElementById('mkfMasterEditForm').onsubmit =
                 async function (e) {
                   e.preventDefault()
+                  try {
                   const password = prompt('저장하려면 암호를 입력하세요.')
                   if (password !== '2233') {
                     alert('암호가 올바르지 않습니다.')
                     return
                   }
+
                   const formData = new FormData(e.target)
                   const updateData = {}
                   for (const [k, v] of formData.entries()) {
                     if (!readonlyFields.includes(k)) updateData[k] = v
                   }
+
                   if (updateData.passport_number) {
                     if (updateData.passport_number.length > 9) {
                       alert('passport_number의 길이는 최대 9자리여야 합니다.')
                       return
                     }
                   }
+
                   if (
                     updateData.passport_name == null ||
                     updateData.passport_name == undefined ||
@@ -509,6 +514,7 @@ document.getElementById('compareButton').addEventListener('click', function () {
                     alert('passport_name을 입력하세요.')
                     return
                   }
+
                   if (
                     updateData.sim_price == null ||
                     Number(updateData.sim_price) == 0 ||
@@ -552,46 +558,44 @@ document.getElementById('compareButton').addEventListener('click', function () {
                     }
                   }
                   // passport_number 없으면 insert, 있으면 update
-                  try {
-                    let res
-                    if (
-                      updateData.passport_number &&
-                      updateData.passport_number !== ''
-                    ) {
-                      // 저장 버튼 클릭 시
-                      const checkRes = await fetch(
-                        `/api/records/passport/${updateData.passport_number}`
+                  try {console.log('isCompareMode:', window.isCompareMode)
+                    if (window.isCompareMode) {
+                      const result = await updateRecordByPassport(
+                        updateData,
+                        'N'
                       )
-                      if (checkRes.ok) {
-                        console.log('Already Record exist, update record')
-
-                        res = await fetch(
-                          `/api/records/${updateData.passport_number}`,
-                          {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(updateData)
-                          }
-                        )
-                      } else {
-                        console.log('Record not found, inserting new record')
-                        delete updateData.id
-                        res = await fetch('/api/records', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify(updateData)
-                        })
+                      // Handle success for updateRecordByPassport here
+                      alert('데이터가 성공적으로 업데이트되었습니다.')
+                      // Optionally, reload the error data table to reflect changes
+                      const currentFilters = {
+                        commit_date:
+                          document.getElementById('search_commit_date').value,
+                        passport_number: document.getElementById(
+                          'search_passport_number'
+                        ).value,
+                        nationality:
+                          document.getElementById('search_nationality').value,
+                        passport_name: document.getElementById(
+                          'search_passport_name'
+                        ).value,
+                        error_code:
+                          document.getElementById('search_error_code').value
                       }
-                    }
-                    if (res.ok) {
-                      alert('저장되었습니다.')
+                      loadErrorData(currentFilters)
+                      document.getElementById('compareLeftContent').innerHTML =
+                        '' // Clear left content after save
                     } else {
-                      alert('저장 실패')
+                      const result = await updateRecordById(updateData, 'N')
+                      window.location.reload() // This will refresh the entire page
                     }
-                  } catch (err) {
-                    alert('저장 중 오류 발생')
+                  } catch (error) {
+                    alert('데이터 업데이트 중 오류가 발생했습니다.')
+                    console.error('Update record error:', error)
                   }
+                } catch (error) {
+                  console.error('Form submission error:', error)
                 }
+              }
 
               document.getElementById('mkfMasterCancelBtn').onclick =
                 function () {
