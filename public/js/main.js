@@ -172,6 +172,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (commitDateToInput.value.trim()) {
           params.append('commitDateTo', commitDateToInput.value.trim())
         }
+
+        // mkf_status 조건 추가
+        const mkfStatusSelect = document.getElementById('mkfStatus')
+        if (
+          mkfStatusSelect &&
+          mkfStatusSelect.value !== '' &&
+          mkfStatusSelect.value !== 'All' &&
+          mkfStatusSelect.value !== '전체'
+        ) {
+          params.append('mkf_status', mkfStatusSelect.value)
+        }
       }
 
       jobGubun = document.querySelector('input[name="jobGubun"]:checked').value
@@ -592,15 +603,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                                 }>glosign excel 2 추가</option>
                                               <option value="3" ${
                                                 value == 3 ? 'selected' : ''
-                                              }>미입금 0</option>
+                                              }>입금완료</option>
                                               <option value="4" ${
                                                 value == 4 ? 'selected' : ''
-                                              }>미입금</option>
-                                              <option value="5" ${
-                                                value == 5 ? 'selected' : ''
-                                              }>입금완료</option>
-                                              <option value="6" ${
-                                                value == 6 ? 'selected' : ''
                                               }>처리완료</option>
                                               </select>
                                             </td>

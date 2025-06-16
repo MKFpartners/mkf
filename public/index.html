@@ -53,12 +53,13 @@
 
                 <div class="filter-item">
                     <label for="mkf_status">Status:</label>
-                    <select id="mkf_status">
-                        <option value="All">All</option>
-                        <option value="Sign_1 Regist">Sign_1 Regist</option>
-                        <option value="Sign_2 Regist">Sign_2 Regist</option>
-                        <option value="Deposit OK">Deposit OK</option>
-                        <option value="Status OK">Status OK</option>
+                    <select id="mkfStatus">
+                        <option value="전체">전체</option>
+                        <option value="0">초기값</option>
+                        <option value="1">sign_1 Regist</option>
+                        <option value="2">sign_2 Regist</option>
+                        <option value="3">입금완료</option>
+                        <option value="4">처리완료</option>
                     </select>
                 </div>
             </div>
@@ -97,14 +98,15 @@
 
         </div>
         <div class="button-row" style="display: flex; justify-content: flex-start; gap: 10px; margin-top: 5px;">
+            <button id="newMember" class="btn btn-success">New Member</button>
             <button id="excelInputButton" class="secondary-button">gSign Regist</button>
-            <!--button id="depositCheckButton" class="secondary-button">Excel Deposit</button -->
             <button id="bankDepositButton" class="secondary-button">ABA Bank Deposit</button>
             <button id="resetButton" class="secondary-button">Reset</button>
             <button id="compareButton" class="secondary-button">Compare</button>
             <button id="downloadExcelButton" class="primary-button" style="margin-left:8px;">Download</button>
             <button id="openingCheckButton" class="primary-button" style="margin-left:8px;">OpeningCheck</button>
         </div>
+        <script src="js/newMember.js"></script>
         <!-- Hidden File Input -->
         <input type="file" id="excelFileInput" accept=".xlsx, .xls" style="display: none;">
         <input type="file" id="depositCheckInput" accept=".xlsx, .xls" style="display: none;">

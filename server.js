@@ -175,6 +175,8 @@ app.get('/api/records', async (req, res) => {
     let values = []
     let paramCount = 1
     const search_type = req.query.search_type
+    const mkf_status = req.query.mkf_status
+
     console.log('search_type:=', search_type) // search_type 로깅
     // // 미입금 조회 search_type =2, deposit_amount = 0
     // if (search_type == 2) {
@@ -249,6 +251,17 @@ app.get('/api/records', async (req, res) => {
           values.push(dateStr)
           paramCount++
         }
+      }
+
+      if (
+        mkf_status !== undefined &&
+        mkf_status !== null &&
+        mkf_status !== '' &&
+        !isNaN(Number(mkf_status))
+      ) {
+        conditions.push(`mkf_status = $${paramCount}`)
+        values.push(Number(mkf_status))
+        paramCount++
       }
     }
     console.log('search_type:', search_type) // search_type 로깅
@@ -725,9 +738,51 @@ app.post('/api/records/update-opening', async (req, res) => {
   }
 })
 
-// 서버 시작
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`)
+// new_members API 엔드포인트
+app.post('/api/name-list', async (req, res) => {
+  const { id, passport_name, gender, date_of_birth } = req.body
+
+  try {
+    const result = await pool.query(
+      'INSERT INTO new_members (id, passport_name, gender, date_of_birth) VALUES ($1, $2, $3, $4, $5)',
+      [id, passport_name, gender, date_of_birth]
+    )
+    res.json({ success: true })
+  } catch (error) {
+    console.error('Error inserting new_Members:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+app.get('/api/new-members', async (req, res) => {
+  const { date } = req.query
+
+  try {
+    const result = await pool.query(
+      'SELECT * FROM new_members WHERE name_list_date = $1 ORDER BY id',
+      [date]
+    )
+    res.json(result.rows)
+  } catch (error) {
+    console.error('Error fetching name list:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+app.patch('/api/name-list/:id', async (req, res) => {
+  const { id } = req.params
+  const { signyn } = req.body
+
+  try {
+    const result = await pool.query(
+      'UPDATE new_members SET signyn = $1 WHERE id = $2',
+      [signyn, id]
+    )
+    res.json({ success: true })
+  } catch (error) {
+    console.error('Error updating sign YN:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
 })
 
 // 에러 핸들링 미들웨어 추가
