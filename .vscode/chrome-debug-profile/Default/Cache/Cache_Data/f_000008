@@ -5,12 +5,6 @@ document
     // 이 작업은 현재 페이지의 모든 콘텐츠를 지우고 새로운 콘텐츠로 대체합니다.
     document.body.innerHTML = ''
 
-    const today = new Date()
-    const yyyy = today.getFullYear() // yyyy 변수 선언 추가
-    const mm = String(today.getMonth() + 1).padStart(2, '0')
-    const dd = String(today.getDate()).padStart(2, '0')
-    const todayStr = `${yyyy}-${mm}-${dd}`
-
     const nationalityOptions = `
       <option value="All">All</option>
       <option value="Cambodia">Cambodia</option>
@@ -64,12 +58,12 @@ document
           <h2 style="text-align:center; margin-bottom:24px; font-size:2rem;">NEW MEMBERS DATA</h2>
           <div style="margin-bottom:16px;">
             <div style="margin-bottom:8px;">
-              <input type="date" id="search_commit_date" placeholder="commit_date" style="width:140px; margin-right:8px;" value="${todayStr}">
               <select id="search_nationality" style="width:120px; margin-right:8px;">
                 ${nationalityOptions}
               </select>
               <input type="text" id="search_passport_name" placeholder="passport_name" style="width:120px; margin-right:4px;">
               <input type="text" id="search_passport_number" placeholder="passport_number" style="width:120px; margin-right:4px;">
+              <span style="color:#666; font-size:0.9rem; margin-left:4px;">(mkf_status=1)</span>
               </div>
           </div>
           <div style="margin-bottom:8px; display:flex; align-items:center;">
@@ -94,17 +88,21 @@ document
         window.location.reload()
       })
 
-    document.getElementById('search_commit_date').value = todayStr
+    //document.getElementById('search_commit_date').value = todayStr
     document.getElementById('search_nationality').value = 'Cambodia'
 
-    async function loadMembersData(filters = {}) {
-      let url = '/api/members-data'
+    async function SelectNewMembers(Nationality = '', passport_name = '', passport_number = '') {
+      let url = '/api/select-new-members'
       const params = []
-      for (const key in filters) {
-        if (filters[key] && filters[key] !== 'All')
-          params.push(
-            `${encodeURIComponent(key)}=${encodeURIComponent(filters[key])}`
-          )
+      
+      if (Nationality && Nationality !== 'All') {
+        params.push(`nationality=${encodeURIComponent(Nationality)}`)
+      }
+      if (passport_name) {
+        params.push(`passport_name=${encodeURIComponent(passport_name)}`)
+      }
+      if (passport_number) {
+        params.push(`passport_number=${encodeURIComponent(passport_number)}`)
       }
       if (params.length > 0) url += '?' + params.join('&')
 
@@ -296,21 +294,99 @@ document
                     </tbody>
                   </table>
                   <div style="margin-top:16px; text-align:right;">
+                    <button type="button" id="membersMstBtn" style="margin-right:8px;">MST</button>
                     <button type="button" id="membersSaveBtn" style="margin-right:8px;">저장</button>
                     <button type="button" id="membersCancelBtn">취소</button>
                   </div>
                 </form>
               `
+              // MST 버튼 클릭 이벤트 핸들러
+              document
+                .getElementById('membersMstBtn')
+                .addEventListener('click', async () => {
+                  // mkf_status 값 확인
+                  const mkfStatusValue = document.getElementById('input_mkf_status')?.value;
+                  
+                  if (mkfStatusValue === '1') {
+                    alert('mkf_status를 2로 수정하세요');
+                    return;
+                  }
+                  
+                  // passport_number 유효성 검사
+                  const passportNumber = document.getElementById('input_passport_number').value;
+                  
+                  if (!passportNumber || passportNumber.trim() === '') {
+                    alert('passport_number는 필수 항목입니다.');
+                    return;
+                  }
+                  
+                  if (passportNumber.trim().length > 9) {
+                    alert('passport_number는 9자리를 초과할 수 없습니다.');
+                    return;
+                  }
+                  
+                  // New to MKF 처리를 위한 데이터 수집
+                  console.log('New to MKF processing started...')
+                  
+                  const data = {
+                    p_passport_name: document.getElementById('input_passport_name').value,
+                    p_gender: document.getElementById('input_gender').value,
+                    p_date_of_birth: document.getElementById('input_date_of_birth').value,
+                    p_tel_number: document.getElementById('input_tel_number').value,
+                    p_signyn: document.getElementById('input_signyn').value,
+                    p_passport_number: document.getElementById('input_passport_number').value,
+                    p_nationality: document.getElementById('input_nationality').value,
+                    p_entry_date: document.getElementById('input_entry_date').value
+                  }
+                  
+                  // 서버에 New to MKF 처리 요청
+                  try {
+                    const response = await fetch('/api/new-to-mkf', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(data)
+                    })
+                    
+                    if (!response.ok) {
+                      const errorData = await response.json()
+                      throw new Error(errorData.error || 'New to MKF 처리 중 서버 오류가 발생했습니다.')
+                    }
+                    
+                    const result = await response.json()
+                    if (result && result.result) {
+                      alert(`New to MKF 처리가 완료되었습니다: ${result.result}`)
+                      return result.result; // 정상인 경우 ID 반환
+                    } else if (result && result.id) {
+                      alert(`New to MKF 처리가 완료되었습니다. ID: ${result.id}`)
+                      return result.id; // 정상인 경우 ID 반환
+                    } else {
+                      alert('New to MKF 처리가 완료되었습니다.')
+                      return null;
+                    }
+                  } catch (error) {
+                    console.error('New to MKF 처리 중 오류 발생:', error)
+                    alert(`New to MKF 처리 실패: ${error.message}`)
+                    return null; // 오류인 경우 null 반환
+                  }
+                })
+
               // 저장 버튼 클릭 이벤트 핸들러
               document
                 .getElementById('membersSaveBtn')
                 .addEventListener('click', async () => {
                   // left panel에서 입력값 수집
                   console.log('Saving member data...')
+                  
+                  // 오늘 날짜를 YYYY-MM-DD 형식으로 생성
+                  const today = new Date()
+                  const yyyy = today.getFullYear()
+                  const mm = String(today.getMonth() + 1).padStart(2, '0')
+                  const dd = String(today.getDate()).padStart(2, '0')
+                  const todayStr = `${yyyy}-${mm}-${dd}`
+                  
                   const data = {
                     p_id: document.getElementById('input_id').value,
-                    p_commit_date:
-                      document.getElementById('input_commit_date').value,
+                    p_commit_date: todayStr, // 항상 오늘 날짜로 설정
                     p_field_update:
                       document.getElementById('input_field_update').value,
                     p_passport_name:
@@ -331,6 +407,8 @@ document
                       document.getElementById('input_error_message').value,
                     p_entry_date:
                       document.getElementById('input_entry_date').value,
+                    p_mkf_status:
+                      document.getElementById('input_mkf_status')?.value || 1,
                   }
 
                   // 데이터 확인용 메시지
@@ -345,7 +423,7 @@ document
 
                   // 서버에 요청
                   try {
-                    const response = await fetch('/api/select-new-members', {
+                    const response = await fetch('/api/update-new-members', {
                       method: 'POST',
                       headers: { 'Content-Type': 'application/json' },
                       body: JSON.stringify(data)
@@ -400,28 +478,12 @@ document
     document
       .getElementById('membersSearchBtn')
       .addEventListener('click', function () {
-        const filters = {
-          commit_date: document.getElementById('search_commit_date').value,
-          passport_number:
-            document.getElementById('search_passport_number').value,
-          nationality: document.getElementById('search_nationality').value,
-          passport_name: document.getElementById('search_passport_name').value,
-        }
-        loadMembersData(filters)
+        const nationality = document.getElementById('search_nationality').value
+        const passport_name = document.getElementById('search_passport_name').value
+        const passport_number = document.getElementById('search_passport_number').value
+        
+        SelectNewMembers(nationality, passport_name, passport_number)
       })
 
-    loadMembersData({
-      commit_date: todayStr,
-      nationality: 'Cambodia',
-    })
+    SelectNewMembers('Cambodia', '', '')
   })
-
-// 이 부분은 첫 번째 리스너에 통합되었으므로, 불필요해진 이전 코드를 주석 처리하거나 제거할 수 있습니다.
-/*
-document
-  .getElementById('membersBackButton')
-  .addEventListener('click', function () {
-    document.getElementById('members-content').style.display = 'none'
-    document.getElementById('main-content').style.display = 'block'
-  })
-*/

@@ -52,7 +52,7 @@
                 </div>
 
                 <div class="filter-item">
-                    <label for="mkf_status">Status:</label>
+                    <label for="mkfStatus">Status:</label>
                     <select id="mkfStatus">
                         <option value="전체">전체</option>
                         <option value="0">초기값</option>
@@ -88,7 +88,7 @@
             <div style="display: flex; align-items: center; gap: 10px; margin-left: 10px;">
                 <label class="deposit-check-label" for="depositCheck">입금조회</label>
                 <input type="checkbox" id="depositCheck" />
-                <label class="nodeposit-check-label" for="noepositCheck">미입금조회</label>
+                <label class="nodeposit-check-label" for="nodepositCheck">미입금조회</label>
                 <input type="checkbox" id="nodepositCheck" />
                 <label class="loan-preference-label" for="loanPreferenceCheck">대출요청</label>
                 <input type="checkbox" id="loanPreferenceCheck" />
@@ -98,17 +98,76 @@
 
         </div>
         <div class="button-row" style="display: flex; justify-content: flex-start; gap: 10px; margin-top: 5px;">
-            <button id="newMembersButton" class="secondary-button">New Member</button>
+            <button id="txt2MembersButton" class="secondary-button">Text to Members</button>
+            <!-- <button id="newMembersButton" class="secondary-button">New Member</button> -->
             <button id="viewMembersButton" class="secondary-button">V</button>
             <button id="excelInputButton" class="secondary-button">gSign Regist</button>
             <button id="bankDepositButton" class="secondary-button">ABA Bank Deposit</button>
-            <button id="resetButton" class="secondary-button">Reset</button>
             <button id="compareButton" class="secondary-button">Compare</button>
-            <button id="downloadExcelButton" class="primary-button" style="margin-left:8px;">Download</button>
-            <button id="openingCheckButton" class="primary-button" style="margin-left:8px;">Opening Check</button>
-            <button id="txt2MembersButton" class="primary-button" style="margin-left:8px;">Text to Members</button>
+            <button id="downloadExcelButton" class="secondary-button" style="margin-left:8px;">Download</button>
+            <button id="openingCheckButton" class="secondary-button" style="margin-left:8px;">Opening Check</button>
+            <button id="resetButton" class="primary-button" style="margin-left:auto;">Reset</button>
+            <button id="helpButton" class="secondary-button">Help</button>
         </div>
         
+        <!-- Help 모달 UI -->
+        <div id="helpModal" style="display: none; position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 10001; align-items: center; justify-content: center;">
+            <div style="background: #fff; border-radius: 10px; padding: 30px; min-width: 500px; max-width: 90vw; box-shadow: 0 4px 24px rgba(0,0,0,0.3); position: relative;">
+                <button onclick="document.getElementById('helpModal').style.display='none'" style="position: absolute; right: 15px; top: 15px; background: none; border: none; font-size: 24px; cursor: pointer; color: #666;">×</button>
+                <h3 style="margin-top: 0; color: #333; margin-bottom: 25px;">도움말 - 기능 선택</h3>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="helpFunction" value="search" style="margin: 0;">
+                            <span>Search (검색)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="helpFunction" value="txt2Members" style="margin: 0;">
+                            <span>Text to Members</span>
+                        </label>
+                        <!-- <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="helpFunction" value="newMembers" style="margin: 0;">
+                            <span>New Member</span>
+                        </label> -->
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="helpFunction" value="viewMembers" style="margin: 0;">
+                            <span>V</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="helpFunction" value="excelInput" style="margin: 0;">
+                            <span>gSign Regist</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="helpFunction" value="bankDeposit" style="margin: 0;">
+                            <span>ABA Bank Deposit</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="helpFunction" value="compare" style="margin: 0;">
+                            <span>Compare</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="helpFunction" value="downloadExcel" style="margin: 0;">
+                            <span>Download</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="helpFunction" value="openingCheck" style="margin: 0;">
+                            <span>Opening Check</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                            <input type="radio" name="helpFunction" value="reset" style="margin: 0;">
+                            <span>Reset</span>
+                        </label>
+                    </div>
+                    
+                    <!-- 확인/취소 버튼 -->
+                    <div style="display: flex; justify-content: center; gap: 15px; margin-top: 20px;">
+                        <button id="cancelHelpButton" class="secondary-button" style="padding: 12px 30px; font-size: 16px; min-width: 100px;">취소</button>
+                        <button id="confirmHelpButton" class="primary-button" style="padding: 12px 30px; font-size: 16px; min-width: 100px;">확인</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Excel 파일 처리 UI -->
         <div id="excelProcessingUI" style="display: none; position: fixed; left: 0; top: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center;">
             <div style="background: #fff; border-radius: 10px; padding: 30px; min-width: 500px; max-width: 90vw; box-shadow: 0 4px 24px rgba(0,0,0,0.3); position: relative;">
@@ -526,7 +585,51 @@
     // 전역 함수로 노출
     window.preprocessImage = preprocessImage;
     window.advancedPreprocessImage = advancedPreprocessImage;
+    
+    // Help 모달 기능
+    document.addEventListener('DOMContentLoaded', function() {
+        const helpButton = document.getElementById('helpButton');
+        const helpModal = document.getElementById('helpModal');
+        const confirmHelpButton = document.getElementById('confirmHelpButton');
+        const cancelHelpButton = document.getElementById('cancelHelpButton');
+        
+        // Help 버튼 클릭 시 모달 열기
+        if (helpButton) {
+            helpButton.addEventListener('click', function() {
+                helpModal.style.display = 'flex';
+            });
+        }
+        
+        // 취소 버튼 클릭 시 모달 닫기
+        if (cancelHelpButton) {
+            cancelHelpButton.addEventListener('click', function() {
+                helpModal.style.display = 'none';
+                // 라디오 버튼 선택 해제
+                const radioButtons = document.querySelectorAll('input[name="helpFunction"]');
+                radioButtons.forEach(radio => radio.checked = false);
+            });
+        }
+        
+        // 확인 버튼 클릭 시 선택된 기능에 대한 도움말 표시
+        if (confirmHelpButton) {
+            confirmHelpButton.addEventListener('click', function() {
+                const selectedFunction = document.querySelector('input[name="helpFunction"]:checked');
+                if (selectedFunction) {
+                    const functionValue = selectedFunction.value;
+                    showHelpContent(functionValue);
+                    helpModal.style.display = 'none';
+                } else {
+                    alert('도움말을 볼 기능을 선택해 주세요.');
+                }
+            });
+        }
+        
+        // 선택된 기능에 대한 도움말 내용 표시 - helpContent.js 파일에서 정의됨
+    });
     </script>
+    
+    <!-- Help Content 스크립트 파일 -->
+    <script src="js/helpContent.js"></script>
     
     <!-- Your main.js 파일 추가 -->
     <script src="/js/newMembers.js"></script>
@@ -537,7 +640,6 @@
     <script src="js/bankDepositCheck.js"></script>
     <script src="js/compareData.js"></script>
     <script src="js/excelDownload.js"></script>
-    <script src="js/imageToExcel.js"></script>
     <script src="js/txt2Members.js"></script>
 </body>
 

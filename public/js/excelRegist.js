@@ -18,7 +18,7 @@ document.getElementById('excelInputButton').addEventListener('click', () => {
   }
 })
 
-/*// File Selection Event
+// File Selection Event
 document
   .getElementById('excelFileInput')
   .addEventListener('change', async event => {
@@ -99,7 +99,7 @@ document
       alert('파일 처리 중 오류가 발생했습니다.')
     }
   })
-*/
+
 // 서버로 쿼리 실행
 async function executeQueries (queries) {
   try {
